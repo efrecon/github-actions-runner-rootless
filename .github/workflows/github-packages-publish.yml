@@ -23,6 +23,8 @@ jobs:
         with:
           file: ./Dockerfile.docker
           tags: ghcr.io/${{ github.repository_owner }}/ubuntu-docker:${{ env.GIT_SHORT_SHA }}
+          build-args: |
+            DOCKER_VERSION=${{ env.GIT_SHORT_SHA }}
           push: true
   push_dind:
     needs: push_docker
@@ -48,7 +50,7 @@ jobs:
           push: true
           build-args: |
             REGISTRY=ghcr.io/${{ github.repository_owner }}
-            TAG=${{ env.GIT_SHORT_SHA }}
+            DOCKER_VERSION=${{ env.GIT_SHORT_SHA }}
   push_gha:
     needs: [push_docker, push_dind]
     name: Push GitHub Actions runner image to GitHub
@@ -72,4 +74,4 @@ jobs:
           push: true
           build-args: |
             REGISTRY=ghcr.io/${{ github.repository_owner }}
-            TAG=${{ env.GIT_SHORT_SHA }}
+            DOCKER_VERSION=${{ env.GIT_SHORT_SHA }}

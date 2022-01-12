@@ -21,7 +21,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           file: ./Dockerfile.docker
-          tags: msyea/ubuntu-docker:${{ env.GIT_SHORT_SHA }}
+          tags: ${{ github.repository_owner }}/ubuntu-docker:${{ env.GIT_SHORT_SHA }}
+          build-args: |
+            DOCKER_VERSION=${{ env.GIT_SHORT_SHA }}
           push: true
   push_dind:
     needs: push_docker
@@ -41,9 +43,11 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           file: ./Dockerfile.dind
-          tags: msyea/ubuntu-dind:${{ env.GIT_SHORT_SHA }}
+          tags: ${{ github.repository_owner }}/ubuntu-dind:${{ env.GIT_SHORT_SHA }}
           push: true
-          build-args: TAG=${{ env.GIT_SHORT_SHA }}
+          build-args: |
+            REGISTRY=${{ github.repository_owner }}
+            DOCKER_VERSION=${{ env.GIT_SHORT_SHA }}
   push_gha:
     needs: [push_docker, push_dind]
     name: Push GitHub Actions runner image to Docker Hub
@@ -61,6 +65,8 @@ jobs:
       - name: Push to Docker Hub
         uses: docker/build-push-action@v2
         with:
-          tags: msyea/github-actions-runner:${{ env.GIT_SHORT_SHA }}
+          tags: ${{ github.repository_owner }}/github-actions-runner:${{ env.GIT_SHORT_SHA }}
           push: true
-          build-args: TAG=${{ env.GIT_SHORT_SHA }}
+          build-args: |
+            REGISTRY=${{ github.repository_owner }}
+            DOCKER_VERSION=${{ env.GIT_SHORT_SHA }}
