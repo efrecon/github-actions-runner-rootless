@@ -1,6 +1,8 @@
 name: Release images to GitHub Repository and DockerHub
 on:
   push:
+    branches:
+      - "main"
     tags:
       - '*.*.*'
 
