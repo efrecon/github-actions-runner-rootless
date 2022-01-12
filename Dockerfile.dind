@@ -4,8 +4,8 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 ARG REGISTRY=msyea
-ARG TAG=latest
-FROM ${REGISTRY}/ubuntu-docker:${TAG}
+ARG DOCKER_VERSION=latest
+FROM ${REGISTRY}/ubuntu-docker:${DOCKER_VERSION}
 
 # https://github.com/docker/docker/blob/master/project/PACKAGERS.md#runtime-dependencies
 ENV DEBIAN_FRONTEND=noninteractive
@@ -22,7 +22,7 @@ RUN set -eux; \
 		pigz \
     wget \
     iproute2 \
-    kmod    
+    kmod
 
 # set up subuid/subgid so that "--userns-remap=default" works out-of-the-box
 RUN set -eux; \
