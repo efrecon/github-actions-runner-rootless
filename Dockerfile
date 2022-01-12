@@ -125,7 +125,7 @@ WORKDIR /actions-runner
 RUN chown rootless:rootless /actions-runner
 USER rootless
 RUN if [ "$GH_RUNNER_VERSION" = "latest" ]; then GH_RUNNER_VERSION=$(wget -q -O - "https://raw.githubusercontent.com/actions/runner/main/src/runnerversion"); fi \
-		&& wget -O actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz https://github.com/actions/runner/releases/download/v${GH_RUNNER_VERSION}/actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
+		&& wget -O actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz https://github.com/actions/runner/releases/download/v${GH_RUNNER_VERSION#v*}/actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
 		&& tar xzf ./actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
 		&& rm -f ./actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz
 USER root
