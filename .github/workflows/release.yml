@@ -1,7 +1,8 @@
 name: Release images to GitHub Repository and DockerHub
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - '*.*.*'
 
 jobs:
   # Detect current version of Docker (engine) and arrange for the `version`
@@ -18,7 +19,7 @@ jobs:
         uses: pozetroninc/github-action-get-latest-release@v0.5.0
         with:
           repository: moby/mody
-          exclude: prerelease, draft
+          excludes: prerelease, draft
       - name: Docker SemVer
         id: semver
         shell: bash
@@ -99,12 +100,12 @@ jobs:
         with:
           tags: |
             docker.pkg.github.com/${{ github.repository_owner }}/github-actions-runner/github-actions-runner:latest
-            docker.pkg.github.com/${{ github.repository_owner }}/github-actions-runner/github-actions-runner:${{ github.event.release.tag_name }}
+            docker.pkg.github.com/${{ github.repository_owner }}/github-actions-runner/github-actions-runner:${{ github.ref_name }}
           push: true
           build-args: |
             REGISTRY=docker.pkg.github.com/${{ github.repository_owner }}/github-actions-runner
             DOCKER_VERSION=${{ jobs.docker_version.version }}
-            GH_RUNNER_VERSION=${{ github.event.release.tag_name }}
+            GH_RUNNER_VERSION=${{ github.ref_name }}
 
   # Publish the various images to the Docker Hub. The Docker images will be
   # tagged as of the version of the Docker engine that they are based on. The
@@ -173,9 +174,9 @@ jobs:
         with:
           tags: |
             ${{ github.repository_owner }}/github-actions-runner:latest
-            ${{ github.repository_owner }}/github-actions-runner:${{ github.event.release.tag_name }}
+            ${{ github.repository_owner }}/github-actions-runner:${{ github.ref_name }}
           push: true
           build-args: |
             REGISTRY=${{ github.repository_owner }}
             DOCKER_VERSION=${{ jobs.docker_version.version }}
-            GH_RUNNER_VERSION=${{ github.event.release.tag_name }}
+            GH_RUNNER_VERSION=${{ github.ref_name }}
