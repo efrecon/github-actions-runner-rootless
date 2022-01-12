@@ -14,18 +14,19 @@ jobs:
         with:
           repository: actions/runner
           exclude: prerelease, draft
-      - name: Own Release Version
-        id: own
-        uses: pozetroninc/github-action-get-latest-release@v0.5.0
-        with:
-          repository: ${{ github.repository }}
-          exclude: prerelease, draft
       - name: Runner SemVer
         id: semver
         shell: bash
         run: |
           GH_RUNNER_VERSION=${{ steps.runner.outputs.release }}
           echo 'GH_RUNNER_VERSION='${GH_RUNNER_VERSION#v*} >> $GITHUB_ENV
+      - name: Own Release Version
+        id: own
+        continue-on-error: true
+        uses: pozetroninc/github-action-get-latest-release@v0.5.0
+        with:
+          repository: ${{ github.repository }}
+          exclude: prerelease, draft
       - name: Create Release
         if: steps.runner.outputs.release != steps.own.outputs.release
         uses: softprops/action-gh-release@v1
