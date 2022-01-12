@@ -2,7 +2,7 @@ name: Release images to GitHub Repository and DockerHub
 on:
   push:
     tags:
-      - '*.*.*'
+      - '*'
 
 jobs:
   # Detect current version of Docker (engine) and arrange for the `version`
