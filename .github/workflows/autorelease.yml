@@ -34,7 +34,7 @@ jobs:
         id: docker
         uses: pozetroninc/github-action-get-latest-release@v0.5.0
         with:
-          repository: moby/mody
+          repository: moby/moby
           excludes: prerelease, draft
       - name: Docker SemVer
         id: docker_semver
