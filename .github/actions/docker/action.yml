@@ -48,7 +48,7 @@ runs:
     - name: Output version
       id: output
       shell: bash
-      run: ::set-output name=version::${{ env.DOCKER_VERSION }}
+      run: echo "::set-output name=version::${{ env.DOCKER_VERSION }}"
 
     # Setup multi-platform support for Docker build
     - name: Set up QEMU
