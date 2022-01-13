@@ -32,4 +32,4 @@ jobs:
         uses: ./.github/actions/runner
         with:
           registry: ghcr.io/${{ github.repository }}
-          docker: ${{ steps.docker.output.version }}
+          docker: ${{ steps.docker.outputs.version }}
