@@ -30,6 +30,14 @@ inputs:
 runs:
   using: composite
   steps:
+    # Guess the versions to use out of the values of the inputs and store these
+    # in the environment.
+    # + DOCKER_VERSION will be the incoming semver, or the git short SHA
+    #   (understood as latest, e.g. current official release at build time)
+    # + RUNNER_VERSION will be the incoming semver, or "latest" (e.g. current
+    #   official release at build time).
+    # + TAG is the name of the GH Action image to generate, either the incoming
+    #   semver, or the git short SHA.
     - name: Docker Version
       id: docker_version
       shell: bash
@@ -50,34 +58,47 @@ runs:
           printf TAG=%s\\n "$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
           printf RUNNER_VERSION=%s\\n "latest" >> "$GITHUB_ENV"
         fi
-    - name: Push Docker to Registry
+
+    # Setup multi-platform support for Docker build
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    # Build and Push the image to the remote registry, in turns.
+    - name: Build/Push Docker to Registry
       id: docker
       uses: docker/build-push-action@v2
       with:
         file: ./Dockerfile.docker
         tags: ${{ inputs.registry }}/ubuntu-docker:${{ env.DOCKER_VERSION }}
+        platforms: linux/amd64,linux/arm64
         build-args: |
           DOCKER_VERSION=${{ env.DOCKER_VERSION }}
         push: true
-    - name: Push DinD to Registry
+    - name: Build/Push DinD to Registry
       id: dind
       uses: docker/build-push-action@v2
       with:
         file: ./Dockerfile.dind
         tags: ${{ inputs.registry }}/ubuntu-dind:${{ env.DOCKER_VERSION }}
+        platforms: linux/amd64,linux/arm64
         push: true
         build-args: |
           REGISTRY=${{ inputs.registry }}
           DOCKER_VERSION=${{ env.DOCKER_VERSION }}
-    - name: Push GH Actions to Registry
+    - name: Build/Push GH Actions Runner to Registry
       uses: docker/build-push-action@v2
       with:
         tags: ${{ inputs.registry }}/github-actions-runner:${{ env.TAG }}
+        platforms: linux/amd64,linux/arm64
         push: true
         build-args: |
           REGISTRY=${{ inputs.registry }}
           DOCKER_VERSION=${{ env.DOCKER_VERSION }}
           GH_RUNNER_VERSION=${{ env.RUNNER_VERSION }}
+
+    # Make the GH actions runner latest if necessary.
     - name: Make GH Actions Image latest
       shell: bash
       run: |
