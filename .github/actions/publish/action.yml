@@ -24,8 +24,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Check out the repo
-      uses: actions/checkout@v2
     - name: Docker Version
       id: docker_version
       shell: bash

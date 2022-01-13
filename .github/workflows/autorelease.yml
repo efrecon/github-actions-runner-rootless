@@ -7,7 +7,12 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      HAVE_ACCESS: ${{ secrets.DOCKERHUB_USERNAME != '' }}
     steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
       # Detect Official latest non-prerelease version of the GH actions runner
       # (as a pure SemVer).
       - name: Runner Release Version
@@ -72,13 +77,13 @@ jobs:
       # the Docker engine and of the action runner. This only happens if a
       # DOCKERHUB_USERNAME is set.
       - name: Login to DockerHub
-        if: secrets.DOCKERHUB_USERNAME != 0
+        if: env.HAVE_ACCESS == 'true'
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Publish Images to DockerHub
-        if: secrets.DOCKERHUB_USERNAME != 0 && steps.runner.outputs.release != steps.own.outputs.release
+        if: env.HAVE_ACCESS == 'true' && steps.runner.outputs.release != steps.own.outputs.release
         uses: ./.github/actions/publish@main
         with:
           registry: ${{ github.repository_owner }}
