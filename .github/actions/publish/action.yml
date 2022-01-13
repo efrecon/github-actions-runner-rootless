@@ -1,0 +1,74 @@
+name: Publish
+description: |
+  Publish Docker images to a registry. You need to be logged in at the registry
+  for this action to perform with success.
+
+inputs:
+  registry:
+    required: true
+    description: |
+      The root of the registry, including "username" to publish to, e.g.
+      msyea (to default to the docker hub), docker.io/msyea to make
+      DockerHub explicit, or ghcr.io/msyea.
+  docker:
+    required: false
+    description: |
+      The version of the Docker engine and rootless tools to use when
+      building the images. Empty for latest (and tag will be short SHA)
+  runner:
+    required: false
+    description: |
+      The version of the GitHub runner to use when building the images.
+      Empty for latest (and tag will be short SHA)
+
+runs:
+  using: composite
+  steps:
+    - name: Check out the repo
+      uses: actions/checkout@v2
+    - name: Docker Version
+      id: docker_version
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.docker }}" ]; then
+          printf DOCKER_VERSION=%s\\n "${{ inputs.docker }}" >> "$GITHUB_ENV"
+        else
+          printf DOCKER_VERSION=%s\\n "$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+        fi
+    - name: Runner Version
+      id: runner_version
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.runner }}" ]; then
+          printf RUNNER_VERSION=%s\\n "${{ inputs.runner }}" >> "$GITHUB_ENV"
+        else
+          printf RUNNER_VERSION=%s\\n "$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+        fi
+    - name: Push Docker to Registry
+      id: docker
+      uses: docker/build-push-action@v2
+      with:
+        file: ./Dockerfile.docker
+        tags: ${{ inputs.registry }}/ubuntu-docker:${{ env.DOCKER_VERSION }}
+        build-args: |
+          DOCKER_VERSION=${{ env.DOCKER_VERSION }}
+        push: true
+    - name: Push DinD to Registry
+      id: dind
+      uses: docker/build-push-action@v2
+      with:
+        file: ./Dockerfile.dind
+        tags: ${{ inputs.registry }}/ubuntu-dind:${{ env.DOCKER_VERSION }}
+        push: true
+        build-args: |
+          REGISTRY=${{ inputs.registry }}
+          DOCKER_VERSION=${{ env.DOCKER_VERSION }}
+    - name: Push GH Actions to Registry
+      uses: docker/build-push-action@v2
+      with:
+        tags: ${{ inputs.registry }}/github-actions-runner:${{ env.RUNNER_VERSION }}
+        push: true
+        build-args: |
+          REGISTRY=${{ inputs.registry }}
+          DOCKER_VERSION=${{ env.DOCKER_VERSION }}
+          GH_RUNNER_VERSION=${{ env.RUNNER_VERSION }}
