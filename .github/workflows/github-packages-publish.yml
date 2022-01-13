@@ -1,11 +1,11 @@
-name: Publish Docker image to GitHub
+name: Publish to GHCR
 on:
   push:
   workflow_dispatch:
 
 jobs:
   push:
-    name: Push images to GitHub
+    name: Push images to GHCR
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo

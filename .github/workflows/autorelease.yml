@@ -1,4 +1,4 @@
-name: Follow GH Runner Release Pace
+name: Follow GH Actions Runner Releases
 on:
   workflow_dispatch:
   schedule:
@@ -6,6 +6,7 @@ on:
 
 jobs:
   check:
+    name: Check for New Releases
     runs-on: ubuntu-latest
     env:
       HAVE_ACCESS: ${{ secrets.DOCKERHUB_USERNAME != '' }}
@@ -103,5 +104,6 @@ jobs:
           name: ${{ steps.runner.outputs.release }}
           body: |
             Automatic release to match new GH Actions runner [release](https://github.com/actions/runner/releases/tag/v${{ env.GH_RUNNER_VERSION }}).
+            See all versions and pull instructions [here](https://github.com/${{ github.repository }}/pkgs/container/github-actions-runner-rootless%2Fgithub-actions-runner)
           draft: false
           prerelease: false
