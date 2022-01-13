@@ -13,10 +13,10 @@ jobs:
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
         with:
-          registry: docker.pkg.github.com
+          registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push Images
         uses: ./.github/actions/publish
         with:
-          registry: docker.pkg.github.com/${{ github.repository }}
+          registry: ghcr.io/${{ github.repository }}
