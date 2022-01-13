@@ -66,6 +66,8 @@ runs:
           REGISTRY=${{ inputs.registry }}
           DOCKER_VERSION=${{ inputs.docker }}
           GH_RUNNER_VERSION=${{ env.RUNNER_VERSION }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     # Make the GH actions runner latest if necessary.
     - name: Make GH Actions Image latest

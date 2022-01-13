@@ -67,6 +67,8 @@ runs:
         build-args: |
           DOCKER_VERSION=${{ env.DOCKER_VERSION }}
         push: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
     - name: Build/Push DinD to Registry
       id: dind
       uses: docker/build-push-action@v2
@@ -78,6 +80,8 @@ runs:
         build-args: |
           REGISTRY=${{ inputs.registry }}
           DOCKER_VERSION=${{ env.DOCKER_VERSION }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     # Make the images latest if necessary.
     - name: Make Docker Images latest
