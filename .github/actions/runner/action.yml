@@ -15,7 +15,7 @@ inputs:
     default: 20.10.12
     description: |
       The version of the Docker engine and rootless tools to use when
-      building the images. Cannot be empty.
+      building the image. Cannot be empty.
   runner:
     required: false
     description: |
@@ -38,7 +38,7 @@ runs:
     # + TAG is the name of the GH Action image to generate, either the incoming
     #   semver, or the git short SHA.
     - name: Runner Version
-      id: runner_version
+      id: version
       shell: bash
       run: |
         if [ -n "${{ inputs.runner }}" ]; then
