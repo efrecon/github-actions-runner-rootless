@@ -1,6 +1,13 @@
 name: Publish to GHCR
 on:
   push:
+    branches:
+      - '*'
+    paths:
+      - '**.sh'
+      - 'Dockerfile*'
+      - 'dind'
+      - '.github/**'
   workflow_dispatch:
 
 jobs:
@@ -16,7 +23,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push Images
-        uses: ./.github/actions/publish
+      - name: Build and Push Docker Images
+        uses: ./.github/actions/docker
+        id: docker
         with:
           registry: ghcr.io/${{ github.repository }}
+      - name: Build and Push Runner Images
+        uses: ./.github/actions/runner
+        with:
+          registry: ghcr.io/${{ github.repository }}
+          docker: ${{ steps.docker.output.version }}

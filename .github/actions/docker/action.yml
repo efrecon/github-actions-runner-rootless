@@ -1,7 +1,7 @@
-name: Publish
+name: Docker Build&Publish
 description: |
-  Publish Docker images to a registry. You need to be logged in at the registry
-  for this action to perform with success.
+  Publish Docker-related images to a registry. You need to be logged in at the
+  registry for this action to perform with success.
 
 inputs:
   registry:
@@ -10,22 +10,24 @@ inputs:
       The root of the registry, including "username" to publish to, e.g.
       msyea (to default to the docker hub), docker.io/msyea to make
       DockerHub explicit, or ghcr.io/msyea.
-  docker:
+  version:
     required: false
     description: |
       The version of the Docker engine and rootless tools to use when
       building the images. Empty for latest (and tag will be short SHA)
-  runner:
-    required: false
-    description: |
-      The version of the GitHub runner to use when building the images.
-      Empty for latest (and tag will be short SHA)
   latest:
     required: false
     default: "false"
     description: |
-      When set to `true` this will arrange to make the GH actions runner image
-      generated the latest one.
+      When set to `true` this will arrange to make the images generated the
+      latest one.
+
+outputs:
+  version:
+    description:
+      Version of the Docker engine that was passed to the build stage, i.e.
+      either the git short sha, or the incoming (request) semver.
+    value: ${{ steps.output.outputs.version }}
 
 runs:
   using: composite
@@ -34,30 +36,19 @@ runs:
     # in the environment.
     # + DOCKER_VERSION will be the incoming semver, or the git short SHA
     #   (understood as latest, e.g. current official release at build time)
-    # + RUNNER_VERSION will be the incoming semver, or "latest" (e.g. current
-    #   official release at build time).
-    # + TAG is the name of the GH Action image to generate, either the incoming
-    #   semver, or the git short SHA.
     - name: Docker Version
-      id: docker_version
+      id: version
       shell: bash
       run: |
-        if [ -n "${{ inputs.docker }}" ]; then
-          printf DOCKER_VERSION=%s\\n "${{ inputs.docker }}" >> "$GITHUB_ENV"
+        if [ -n "${{ inputs.version }}" ]; then
+          printf DOCKER_VERSION=%s\\n "${{ inputs.version }}" >> "$GITHUB_ENV"
         else
           printf DOCKER_VERSION=%s\\n "$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
         fi
-    - name: Runner Version
-      id: runner_version
+    - name: Output version
+      id: output
       shell: bash
-      run: |
-        if [ -n "${{ inputs.runner }}" ]; then
-          printf TAG=%s\\n "${{ inputs.runner }}" >> "$GITHUB_ENV"
-          printf RUNNER_VERSION=%s\\n "${{ inputs.runner }}" >> "$GITHUB_ENV"
-        else
-          printf TAG=%s\\n "$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
-          printf RUNNER_VERSION=%s\\n "latest" >> "$GITHUB_ENV"
-        fi
+      run: ::set-output name=version::${{ env.DOCKER_VERSION }}
 
     # Setup multi-platform support for Docker build
     - name: Set up QEMU
@@ -87,20 +78,13 @@ runs:
         build-args: |
           REGISTRY=${{ inputs.registry }}
           DOCKER_VERSION=${{ env.DOCKER_VERSION }}
-    - name: Build/Push GH Actions Runner to Registry
-      uses: docker/build-push-action@v2
-      with:
-        tags: ${{ inputs.registry }}/github-actions-runner:${{ env.TAG }}
-        platforms: linux/amd64,linux/arm64
-        push: true
-        build-args: |
-          REGISTRY=${{ inputs.registry }}
-          DOCKER_VERSION=${{ env.DOCKER_VERSION }}
-          GH_RUNNER_VERSION=${{ env.RUNNER_VERSION }}
 
-    # Make the GH actions runner latest if necessary.
-    - name: Make GH Actions Image latest
+    # Make the images latest if necessary.
+    - name: Make Docker Images latest
+      if: inputs.latest == 'true'
       shell: bash
       run: |
-        docker image tag "${{ inputs.registry }}/github-actions-runner:${{ env.TAG }}" "${{ inputs.registry }}/github-actions-runner:latest"
-        docker image push "${{ inputs.registry }}/github-actions-runner:latest"
+        docker image tag "${{ inputs.registry }}/ubuntu-docker:${{ env.DOCKER_VERSION }}" "${{ inputs.registry }}/ubuntu-docker:latest"
+        docker image push "${{ inputs.registry }}/ubuntu-docker:latest"
+        docker image tag "${{ inputs.registry }}/ubuntu-dind:${{ env.DOCKER_VERSION }}" "${{ inputs.registry }}/ubuntu-dind:latest"
+        docker image push "${{ inputs.registry }}/ubuntu-dind:latest"
