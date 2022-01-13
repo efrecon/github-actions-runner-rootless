@@ -72,6 +72,7 @@ jobs:
           registry: docker.pkg.github.com/${{ github.repository }}
           docker: ${{ env.DOCKER_VERSION }}
           runner: ${{ env.GH_RUNNER_VERSION }}
+          latest: "true"
 
       # Publish containers to the DockerHub tagged with the latest version of
       # the Docker engine and of the action runner. This only happens if a
@@ -89,6 +90,7 @@ jobs:
           registry: ${{ github.repository_owner }}
           docker: ${{ env.DOCKER_VERSION }}
           runner: ${{ env.GH_RUNNER_VERSION }}
+          latest: "true"
 
       # Create a release at GitHub, this arranges for the comparison step to
       # work next time. Release is created last, so it acts as a marker that all

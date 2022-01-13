@@ -20,6 +20,12 @@ inputs:
     description: |
       The version of the GitHub runner to use when building the images.
       Empty for latest (and tag will be short SHA)
+  latest:
+    required: false
+    default: "false"
+    description: |
+      When set to `true` this will arrange to make the GH actions runner image
+      generated the latest one.
 
 runs:
   using: composite
@@ -38,9 +44,11 @@ runs:
       shell: bash
       run: |
         if [ -n "${{ inputs.runner }}" ]; then
+          printf TAG=%s\\n "${{ inputs.runner }}" >> "$GITHUB_ENV"
           printf RUNNER_VERSION=%s\\n "${{ inputs.runner }}" >> "$GITHUB_ENV"
         else
-          printf RUNNER_VERSION=%s\\n "$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+          printf TAG=%s\\n "$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+          printf RUNNER_VERSION=%s\\n "latest" >> "$GITHUB_ENV"
         fi
     - name: Push Docker to Registry
       id: docker
@@ -64,9 +72,14 @@ runs:
     - name: Push GH Actions to Registry
       uses: docker/build-push-action@v2
       with:
-        tags: ${{ inputs.registry }}/github-actions-runner:${{ env.RUNNER_VERSION }}
+        tags: ${{ inputs.registry }}/github-actions-runner:${{ env.TAG }}
         push: true
         build-args: |
           REGISTRY=${{ inputs.registry }}
           DOCKER_VERSION=${{ env.DOCKER_VERSION }}
           GH_RUNNER_VERSION=${{ env.RUNNER_VERSION }}
+    - name: Make GH Actions Image latest
+      shell: bash
+      run: |
+        docker image tag "${{ inputs.registry }}/github-actions-runner:${{ env.TAG }}" "${{ inputs.registry }}/github-actions-runner:latest"
+        docker image push "${{ inputs.registry }}/github-actions-runner:latest"
