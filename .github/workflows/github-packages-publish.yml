@@ -17,6 +17,6 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push Images
-        uses: ./.github/actions/publish@main
+        uses: ./.github/actions/publish
         with:
           registry: docker.pkg.github.com/${{ github.repository }}

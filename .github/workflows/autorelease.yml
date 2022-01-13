@@ -67,7 +67,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish Images to GHCR
         if: steps.runner.outputs.release != steps.own.outputs.release
-        uses: ./.github/actions/publish@main
+        uses: ./.github/actions/publish
         with:
           registry: docker.pkg.github.com/${{ github.repository }}
           docker: ${{ env.DOCKER_VERSION }}
@@ -84,7 +84,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Publish Images to DockerHub
         if: env.HAVE_ACCESS == 'true' && steps.runner.outputs.release != steps.own.outputs.release
-        uses: ./.github/actions/publish@main
+        uses: ./.github/actions/publish
         with:
           registry: ${{ github.repository_owner }}
           docker: ${{ env.DOCKER_VERSION }}

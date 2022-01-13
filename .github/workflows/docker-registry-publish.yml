@@ -21,6 +21,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Push Images
         if: env.HAVE_ACCESS == 'true'
-        uses: ./.github/actions/publish@main
+        uses: ./.github/actions/publish
         with:
           registry: ${{ github.repository_owner }}
