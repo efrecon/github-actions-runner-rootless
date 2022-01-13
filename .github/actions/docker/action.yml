@@ -88,7 +88,9 @@ runs:
       if: inputs.latest == 'true'
       shell: bash
       run: |
+        docker image pull "${{ inputs.registry }}/ubuntu-docker:${{ env.DOCKER_VERSION }}"
         docker image tag "${{ inputs.registry }}/ubuntu-docker:${{ env.DOCKER_VERSION }}" "${{ inputs.registry }}/ubuntu-docker:latest"
         docker image push "${{ inputs.registry }}/ubuntu-docker:latest"
+        docker image pull "${{ inputs.registry }}/ubuntu-dind:${{ env.DOCKER_VERSION }}"
         docker image tag "${{ inputs.registry }}/ubuntu-dind:${{ env.DOCKER_VERSION }}" "${{ inputs.registry }}/ubuntu-dind:latest"
         docker image push "${{ inputs.registry }}/ubuntu-dind:latest"
