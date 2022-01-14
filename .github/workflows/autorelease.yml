@@ -9,7 +9,7 @@ jobs:
     name: Check for New Releases of Docker Engine
     runs-on: ubuntu-latest
     outputs:
-      docker: ${{ steps.semver.outputs.version }}
+      version: ${{ steps.semver.outputs.version }}
     env:
       HAVE_ACCESS: ${{ secrets.DOCKERHUB_USERNAME != '' }}
     steps:
