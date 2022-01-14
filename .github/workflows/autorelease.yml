@@ -54,7 +54,7 @@ jobs:
         uses: ./.github/actions/docker
         with:
           registry: ghcr.io/${{ github.repository }}
-          docker: ${{ env.DOCKER_VERSION }}
+          version: ${{ env.DOCKER_VERSION }}
 
       # Publish containers to the DockerHub tagged with the latest version of
       # the Docker engine and of the action runner. This only happens if a
@@ -80,7 +80,7 @@ jobs:
         uses: ./.github/actions/docker
         with:
           registry: ${{ github.repository_owner }}
-          docker: ${{ env.DOCKER_VERSION }}
+          version: ${{ env.DOCKER_VERSION }}
 
   runner:
     name: Check for New Releases of GH Actions Runner
