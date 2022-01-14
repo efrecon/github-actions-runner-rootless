@@ -8,7 +8,7 @@ on:
       - 'Dockerfile*'
       - 'dind'
       - '.github/actions/**'
-      - '.github/workflows/github-package-publish.yml'
+      - '.github/workflows/github-packages-publish.yml'
   workflow_dispatch:
 
 jobs:
