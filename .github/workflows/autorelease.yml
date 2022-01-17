@@ -106,6 +106,7 @@ jobs:
         run: |
           GH_RUNNER_VERSION=${{ steps.runner.outputs.release }}
           echo 'GH_RUNNER_VERSION='${GH_RUNNER_VERSION#v*} >> $GITHUB_ENV
+          echo "::set-output name=version::${GH_RUNNER_VERSION#v*}"
 
       # Detect our own latest release. This might fail if there are no release
       # yet, but we'll continue anyway as this is a corner case.
@@ -130,7 +131,7 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish Image to GHCR
-        if: steps.runner.outputs.release != steps.own.outputs.release
+        if: steps.semver.outputs.version != steps.own.outputs.release
         uses: ./.github/actions/runner
         with:
           registry: ghcr.io/${{ github.repository }}
@@ -148,7 +149,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Publish Images to DockerHub
-        if: env.HAVE_ACCESS == 'true' && steps.runner.outputs.release != steps.own.outputs.release
+        if: env.HAVE_ACCESS == 'true' && steps.semver.outputs.version != steps.own.outputs.release
         uses: ./.github/actions/runner
         with:
           registry: ${{ github.repository_owner }}
@@ -157,14 +158,15 @@ jobs:
           latest: "true"
 
       # Create a release at GitHub, this arranges for the comparison step to
-      # work next time. Release is created last, so it acts as a marker that all
-      # Docker image publication steps have succeeded.
+      # work next time. Release is created last, so it acts as a marker that
+      # Docker image publication steps have succeeded. Release name contains
+      # leading `v`, release tag **without** the leading `v`.
       - name: Create Release
-        if: steps.runner.outputs.release != steps.own.outputs.release
+        if: steps.semver.outputs.version != steps.own.outputs.release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.GH_RUNNER_VERSION }}
-          name: ${{ steps.runner.outputs.release }}
+          name: ${{ steps.semver.outputs.version }}
           body: |
             Automatic release to match new GH Actions runner [release](https://github.com/actions/runner/releases/tag/v${{ env.GH_RUNNER_VERSION }}).
             See all versions and pull instructions [here](https://github.com/${{ github.repository }}/pkgs/container/github-actions-runner-rootless%2Fgithub-actions-runner)
