@@ -1,12 +1,49 @@
 #!/bin/bash
 
+# shellcheck disable=SC1091
+source /opt/bash-utils/logger.sh
+
 deregister_runner() {
-  echo "Caught SIGTERM. Deregistering runner"
+  INFO "Caught SIGTERM. Deregistering runner"
   _TOKEN=$(token.sh)
   RUNNER_TOKEN=$(echo "${_TOKEN}" | jq -r .token)
   ./config.sh remove --token "${RUNNER_TOKEN}"
+
+  # Call user-level cleanup processes
+  if [[ -n "${RUNNER_CLEANUP_PATH:-}" ]]; then
+    execute "$RUNNER_CLEANUP_PATH"
+  fi
+
   exit
 }
+
+
+# Execute all init/cleanup programs present in the colon separated list of
+# directories passed as $1. The second argument is used to log what type of
+# files this is (initialisation, cleanup).
+execute() {
+  printf %s\\n "$1" |
+    sed 's/:/\n/g' |
+    grep -vE '^$' |
+    while IFS= read -r dir
+    do
+      if [ -d "$dir" ]; then
+        INFO "Executing all files directly under '$dir', in alphabetical order"
+        find -L "$dir" -maxdepth 1 -mindepth 1 -name '*' -type f -executable |
+          sort |
+          while IFS= read -r initfile
+          do
+            INFO "Executing $initfile"
+            "$initfile"
+          done
+      fi
+    done
+}
+
+# Call user-level initialisation processes
+if [[ -n "${RUNNER_INIT_PATH:-}" ]]; then
+  execute "$RUNNER_INIT_PATH"
+fi
 
 _RUNNER_NAME=${RUNNER_NAME:-${RUNNER_NAME_PREFIX:-github-runner}-$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 13 ; echo '')}
 _RUNNER_WORKDIR=${RUNNER_WORKDIR:-/actions-runner/_work}
@@ -25,7 +62,7 @@ if [[ -n "${ACCESS_TOKEN}" ]]; then
   _SHORT_URL=$(echo "${_TOKEN}" | jq -r .short_url)
 fi
 
-echo "Configuring"
+INFO "Configuring runner $_RUNNER_NAME (in group: $_RUNNER_GROUP), labels: $_LABELS"
 ./config.sh \
     --url "${_SHORT_URL}" \
     --token "${RUNNER_TOKEN}" \
