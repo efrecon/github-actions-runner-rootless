@@ -21,6 +21,8 @@ ARG COMPOSE_VERSION=latest
 ARG COMPOSE_SWITCH_ROOT=https://github.com/docker/compose-switch
 ARG COMPOSE_SWITCH_VERSION=latest
 
+ARG DOCKERD_ROOTLESS_INSTALL_FLAGS
+
 # "/run/user/UID" will be used by default as the value of XDG_RUNTIME_DIR
 RUN mkdir /run/user && chmod 1777 /run/user
 
@@ -98,6 +100,8 @@ RUN if [ "$COMPOSE_VERSION" = "latest" ]; then COMPOSE_VERSION=$(wget -q -O - "$
 		fi; \
 		docker-compose --version
 
+# Install and compile git. This will also install a few other packages, incl.
+# curl and tini (for process-tree control within containers).
 RUN apt-get update \
 		&& apt-get -y install \
 					awscli \
@@ -107,6 +111,7 @@ RUN apt-get update \
 					jq \
 					libcurl4-openssl-dev \
 					software-properties-common \
+					tini \
 					zlib1g-dev \
 					zstd \
 		&& if [ "$GIT_VERSION" = "latest" ]; then GIT_VERSION=$(wget -q -O - "https://github.com/git/git/tags"| grep -E '/git/git/releases/tag/v[0-9]' | grep -v rc  |  awk -F'[v\"]' '{print $3}' | head -1); fi \
@@ -135,9 +140,10 @@ COPY logger.sh /opt/bash-utils/
 COPY github-actions-entrypoint.sh runner.sh token.sh dockerd-rootless.sh dockerd-rootless-setup-tool.sh /usr/local/bin/
 
 USER rootless
-RUN dockerd-rootless-setup-tool.sh install
+RUN dockerd-rootless-setup-tool.sh install ${DOCKERD_ROOTLESS_INSTALL_FLAGS}
 ENV XDG_RUNTIME_DIR=/home/rootless/.docker/run \
 		PATH=/usr/local/bin:$PATH \
 		DOCKER_HOST=unix:///home/rootless/.docker/run/docker.sock
 
-ENTRYPOINT ["github-actions-entrypoint.sh"]
+ENTRYPOINT [ "tini", "-s", "--" ]
+CMD [ "github-actions-entrypoint.sh" ]
