@@ -1,4 +1,6 @@
 #!/bin/bash
+
+# shellcheck disable=SC1091
 source /opt/bash-utils/logger.sh
 
 function wait_for_process () {
@@ -24,12 +26,11 @@ INFO "Waiting for processes to be running"
 processes=(dockerd)
 
 for process in "${processes[@]}"; do
-    wait_for_process "$process"
-    if [ $? -ne 0 ]; then
+    if wait_for_process "$process"; then
+        INFO "$process is running"
+    else
         ERROR "$process is not running after max time"
         exit 1
-    else 
-        INFO "$process is running"
     fi
 done
 
