@@ -8,7 +8,8 @@ project. Release checks are scheduled once a day. At the time of the check:
 + The current release of this project is detected.
 + When the semantic versions of these two projects a new release is made:
   + A new Docker is made and published to the GHCR and DockerHub, with a tag
-    without a leading `v`. Publication to the DockerHub only happens whenever relevant secrets are accessible to the project.
+    without a leading `v`. Publication to the DockerHub only happens whenever
+    relevant secrets are accessible to the project.
   + A new (automatic) release is made, named exactly as the [runner] release
     (but with a tag without a leading `v`).
 
