@@ -97,6 +97,7 @@ services:
       ORG_RUNNER: 'false'
       LABELS: linux,x64,gpu
 ```
+
 ## Usage From GH Actions Workflow ##
 
 ```yml
@@ -144,3 +145,45 @@ Creating GitHub personal access token (PAT) for using by self-hosted runner make
 * workflow
 
 Also, when creating a PAT for self-hosted runner which will process events from several repositories of the particular organization, create the PAT using organization owner account. Otherwise your new PAT will not have sufficient privileges for all repositories.
+
+## Available Tools ##
+
+These images do **not** contain **all** the tools that GitHub offers by default
+in their runners. Workflows might work improperly when running from within these
+runners. The [Dockerfile](./Dockerfile) for the runner images ensures:
+
+* A rootless installation of the Docker daemon, including the `docker` cli
+  binary.
+* An installation of Docker [compose]. Unless otherwise specified, the latest
+  stable version at the time of image building will be automatically picked up.
+  At the time of writing, this installs the latest `2.x` branch, rewritten in
+  golang, including the `docker-compose` compatibility [shim].
+* An installation of `git` that is compatible with the github runner code.
+  Unless otherwise specified, the latest stable version at the time of image
+  building will be automatically picked up. This is because the default version
+  available in Ubuntu is too old.
+
+In the rootless runners, the `DOCKER_HOST` variable is set to point out the
+private socket owned by the `rootless` user. In addition, `/var/run/docker.sock`
+is a symbolic link to that socket. This link enables docker
+[actions][docker-action] to properly build images and run containers built on
+these images. The link is necessary as `/var/run/docker.sock` is currently
+[hard-coded].
+
+  [compose]: https://github.com/docker/compose
+  [shim]: https://github.com/docker/compose-switch
+  [docker-action]: https://docs.github.com/en/actions/creating-actions/creating-a-docker-container-action
+  [hard-coded]: https://github.com/actions/runner/blob/47ba1203c98ebe80d7fd27d515485b9624f86e94/src/Runner.Worker/Handlers/ContainerActionHandler.cs#L184
+
+## Releases ##
+
+By default, the Docker images will follow the stable release channel for Docker.
+New images with the semantic version as a tag will be made available shortly
+after a new release of Docker is made. Similarily, the rootless runner image
+follows the release tempo of the main [runner][release] project. New images with
+the semantic version as a tag will be made available shortly after a new
+[release] is made. Released runner images use the latest Docker stable release
+version at the time of the build, e.g. the release. See
+[here](.github/workflows/README.md) for more details.
+
+  [release]: https://github.com/actions/runner/releases
