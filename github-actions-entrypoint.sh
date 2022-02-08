@@ -2,6 +2,8 @@
 
 # shellcheck disable=SC1091
 source /opt/bash-utils/logger.sh
+# shellcheck disable=SC1091
+source /opt/bash-utils/utils.sh
 
 function wait_for_process () {
     local max_time_wait=${2:-30}
@@ -18,6 +20,11 @@ function wait_for_process () {
     done
     return 0
 }
+
+# Call user-level pre-flight processes
+if [[ -n "${RUNNER_PREFLIGHT_PATH:-}" ]]; then
+  execute "$RUNNER_PREFLIGHT_PATH"
+fi
 
 INFO "Starting dockerd-rootless"
 dockerd-rootless.sh >> /dev/null 2>&1 &

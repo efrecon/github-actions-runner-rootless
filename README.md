@@ -32,7 +32,8 @@ This will run the [new self-hosted github actions runners](https://help.github.c
 | `RUNNER_WORKDIR` | The working directory for the runner. Runners on the same host should not share this directory. Default is '/_work'. This must match the source path for the bind-mounted volume at RUNNER_WORKDIR, in order for container actions to access files. |
 | `RUNNER_GROUP` | Name of the runner group to add this runner to (defaults to the default runner group) |
 | `GITHUB_HOST` | Optional URL of the Github Enterprise server e.g github.mycompany.com. Defaults to `github.com`. |
-| `RUNNER_INIT_PATH` | A colon separated list of directories. All executable files present will be run once the rootless daemon is runner, but before the runner is registered. Defaults to empty. |
+| `RUNNER_PREFLIGHT_PATH` | A colon separated list of directories. All executable files present will be run before the rootless daemon is running and runner registered. Defaults to empty. |
+| `RUNNER_INIT_PATH` | A colon separated list of directories. All executable files present will be run once the rootless daemon is running, but before the runner is registered. Defaults to empty. |
 | `RUNNER_CLEANUP_PATH` | A colon separated list of directories. All executable files present will be run after the runner has been deregistered. Defaults to empty. |
 
 ### Manual ###

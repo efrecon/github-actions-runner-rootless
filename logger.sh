@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Logger from this post http://www.cubicrace.com/2016/03/log-tracing-mechnism-for-shell-scripts.html
 
 function INFO(){

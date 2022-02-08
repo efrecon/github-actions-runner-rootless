@@ -2,6 +2,8 @@
 
 # shellcheck disable=SC1091
 source /opt/bash-utils/logger.sh
+# shellcheck disable=SC1091
+source /opt/bash-utils/utils.sh
 
 deregister_runner() {
   INFO "Caught SIGTERM. Deregistering runner"
@@ -15,29 +17,6 @@ deregister_runner() {
   fi
 
   exit
-}
-
-
-# Execute all init/cleanup programs present in the colon separated list of
-# directories passed as $1. The second argument is used to log what type of
-# files this is (initialisation, cleanup).
-execute() {
-  printf %s\\n "$1" |
-    sed 's/:/\n/g' |
-    grep -vE '^$' |
-    while IFS= read -r dir
-    do
-      if [ -d "$dir" ]; then
-        INFO "Executing all files directly under '$dir', in alphabetical order"
-        find -L "$dir" -maxdepth 1 -mindepth 1 -name '*' -type f -executable |
-          sort |
-          while IFS= read -r initfile
-          do
-            INFO "Executing $initfile"
-            "$initfile"
-          done
-      fi
-    done
 }
 
 # Call user-level initialisation processes

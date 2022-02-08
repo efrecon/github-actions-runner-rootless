@@ -136,7 +136,7 @@ RUN if [ "$GH_RUNNER_VERSION" = "latest" ]; then GH_RUNNER_VERSION=$(wget -q -O 
 USER root
 RUN ./bin/installdependencies.sh
 
-COPY logger.sh /opt/bash-utils/
+COPY logger.sh utils.sh /opt/bash-utils/
 COPY github-actions-entrypoint.sh runner.sh token.sh dockerd-rootless.sh dockerd-rootless-setup-tool.sh /usr/local/bin/
 # Create a link to where we will be storing the rootless UNIX socket for the
 # Docker daemon. This is to allow Dockerfile-based GH actions to run, as the
