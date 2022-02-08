@@ -18,11 +18,11 @@
 # See the documentation for the further information: https://docs.docker.com/engine/security/rootless/
 
 set -e -x
-if ! [ -w $XDG_RUNTIME_DIR ]; then
+if ! [ -w "$XDG_RUNTIME_DIR" ]; then
 	echo "XDG_RUNTIME_DIR needs to be set and writable"
 	exit 1
 fi
-if ! [ -w $HOME ]; then
+if ! [ -w "$HOME" ]; then
 	echo "HOME needs to be set and writable"
 	exit 1
 fi
@@ -71,7 +71,7 @@ if [ -z $mtu ]; then
 	mtu=1500
 fi
 
-if [ -z $_DOCKERD_ROOTLESS_CHILD ]; then
+if [ -z "$_DOCKERD_ROOTLESS_CHILD" ]; then
 	_DOCKERD_ROOTLESS_CHILD=1
 	export _DOCKERD_ROOTLESS_CHILD
 	# Re-exec the script via RootlessKit, so as to create unprivileged {user,mount,network} namespaces.
@@ -89,11 +89,11 @@ if [ -z $_DOCKERD_ROOTLESS_CHILD ]; then
 		--copy-up=/etc --copy-up=/run \
 		--propagation=rslave \
 		$DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS \
-		$0 $@
+		"$0" "$@"
 else
 	[ $_DOCKERD_ROOTLESS_CHILD = 1 ]
 	# remove the symlinks for the existing files in the parent namespace if any,
 	# so that we can create our own files in our mount namespace.
 	rm -f /run/docker /run/containerd /run/xtables.lock
-	exec dockerd $@
+	exec dockerd "$@"
 fi
