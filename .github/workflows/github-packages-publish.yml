@@ -29,6 +29,11 @@ jobs:
         id: docker
         with:
           registry: ghcr.io/${{ github.repository }}
+      - name: Build and Push git Images
+        uses: ./.github/actions/git
+        id: git
+        with:
+          registry: ghcr.io/${{ github.repository }}
       - name: Build and Push Runner Images
         uses: ./.github/actions/runner
         with:
