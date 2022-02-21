@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 # Use the GitHub homepage, and not the API, to get the latest sharp version of a
 # project. This bypasses rate-limiting restrictions.
 

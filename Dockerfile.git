@@ -6,7 +6,7 @@ FROM ubuntu:20.04
 ARG GIT_VERSION="latest"
 
 # Copy our version guess helper
-COPY version.sh /usr/local/bin/
+COPY utils/version.sh utils/install-git.sh /usr/local/bin/
 
 # Install and compile git.
 RUN apt-get update \
@@ -18,15 +18,7 @@ RUN apt-get update \
 					software-properties-common \
 					wget \
 					zlib1g-dev \
-		&& if [ "$GIT_VERSION" = "latest" ] || printf %s\\n "${GIT_VERSION}" | grep -Eq '^[0-9a-f]{7}$'; then GIT_VERSION=$(version.sh "git/git"); fi \
-		&& cd /tmp \
-		&& curl -sL https://www.kernel.org/pub/software/scm/git/git-${GIT_VERSION}.tar.gz -o git.tgz \
-		&& tar zxf git.tgz \
-		&& cd git-${GIT_VERSION} \
-		&& ./configure --prefix=/usr \
-		&& NO_TCLTK=1 INSTALL_SYMLINKS=1 make install \
-		&& rm -rf /var/lib/apt/lists/* \
-		&& rm -rf /tmp/* \
-		&& git --version
+		&& install-git.sh -v "${GIT_VERSION}" \
+		&& rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT [ "git" ]

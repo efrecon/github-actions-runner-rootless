@@ -14,47 +14,13 @@ RUN apt update \
 RUN echo 'hosts: files dns' >> /etc/nsswitch.conf
 
 # Copy our version guess helper
-COPY version.sh /usr/local/bin/
+COPY utils/version.sh utils/install-docker.sh /usr/local/bin/
 
 # TODO ENV DOCKER_SHA256
 # https://github.com/docker/docker-ce/blob/5b073ee2cf564edee5adca05eee574142f7627bb/components/packaging/static/hash_files !!
 # (no SHA file artifacts on download.docker.com yet as of 2017-06-07 though)
 
-RUN set -eux; \
-	\
-	arch="$(uname --m)"; \
-	case "$arch" in \
-        # amd64
-		x86_64) dockerArch='x86_64' ;; \
-        # arm32v6
-		armhf) dockerArch='armel' ;; \
-        # arm32v7
-		armv7) dockerArch='armhf' ;; \
-        # arm64v8
-		aarch64) dockerArch='aarch64' ;; \
-		*) echo >&2 "error: unsupported architecture ($arch)"; exit 1 ;;\
-	esac; \
-	\
-	if [ "${DOCKER_CHANNEL}" = "stable" ]; then \
-		if [ "${DOCKER_VERSION}" = "latest" ] || printf %s\\n "${DOCKER_VERSION}" | grep -Eq '^[0-9a-f]{7}$'; then \
-			DOCKER_VERSION=$(version.sh "moby/moby"); \
-		fi; \
-	fi; \
-	\
-	if ! wget -q -O docker.tgz "https://download.docker.com/linux/static/${DOCKER_CHANNEL}/${dockerArch}/docker-${DOCKER_VERSION}.tgz"; then \
-		echo >&2 "error: failed to download 'docker-${DOCKER_VERSION}' from '${DOCKER_CHANNEL}' for '${dockerArch}'"; \
-		exit 1; \
-	fi; \
-	\
-	tar --extract \
-		--file docker.tgz \
-		--strip-components 1 \
-		--directory /usr/local/bin/ \
-	; \
-	rm docker.tgz; \
-	\
-	dockerd --version; \
-	docker --version
+RUN install-docker.sh -v "${DOCKER_VERSION}" -c "${DOCKER_CHANNEL}"
 
 COPY modprobe.sh /usr/local/bin/modprobe
 COPY docker-entrypoint.sh /usr/local/bin/
