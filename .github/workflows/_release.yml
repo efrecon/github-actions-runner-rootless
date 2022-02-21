@@ -23,10 +23,10 @@ on:
       password:
         required: false
         description: Password/token for access at the DockerHub
-    # outputs:
-    #   version:
-    #     description: The latest released version of the project
-    #     value: ${{ jobs.build.outputs.version }}
+    outputs:
+      version:
+        description: The latest released version of the project
+        value: ${{ jobs.build.outputs.version }}
 
 jobs:
   build:
