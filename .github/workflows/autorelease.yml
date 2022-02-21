@@ -1,4 +1,4 @@
-name: Follow GH Actions Runner and Docker Releases
+name: Follow Upstream Releases
 on:
   workflow_dispatch:
   schedule:
@@ -7,7 +7,7 @@ on:
 jobs:
   docker:
     name: Check for New Releases of Docker Engine
-    uses: efrecon/github-actions-runner-rootless/.github/workflows/_release.yml@feature/git-image
+    uses: ./.github/workflows/_release.yml
     with:
       project: moby/moby
       action: ./.github/actions/docker
@@ -18,7 +18,7 @@ jobs:
 
   git:
     name: Check for New Releases of git
-    uses: efrecon/github-actions-runner-rootless/.github/workflows/_release.yml@feature/git-image
+    uses: ./.github/workflows/_release.yml
     with:
       project: git/git
       action: ./.github/actions/git
