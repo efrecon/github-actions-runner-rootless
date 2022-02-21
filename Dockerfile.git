@@ -1,9 +1,12 @@
-FROM ubuntu:20.04 as builder
+FROM ubuntu:20.04
 
 # Ubuntu focal (20.04) has git v2.25, but GitHub Actions require higher. We
 # build git from source instead. When latest, will pick latest stable release at
 # the time of the build.
 ARG GIT_VERSION="latest"
+
+# Copy our version guess helper
+COPY version.sh /usr/local/bin/
 
 # Install and compile git.
 RUN apt-get update \
@@ -15,32 +18,15 @@ RUN apt-get update \
 					software-properties-common \
 					wget \
 					zlib1g-dev \
-		&& if [ "$GIT_VERSION" = "latest" ] || printf %s\\n "${GIT_VERSION}" | grep -Eq '^[0-9a-f]{7}$'; then GIT_VERSION=$(wget -q -O - "https://github.com/git/git/tags"| grep -E '/git/git/releases/tag/v[0-9]' | grep -v rc  |  awk -F'[v\"]' '{print $3}' | head -1); fi \
+		&& if [ "$GIT_VERSION" = "latest" ] || printf %s\\n "${GIT_VERSION}" | grep -Eq '^[0-9a-f]{7}$'; then GIT_VERSION=$(version.sh "git/git"); fi \
 		&& cd /tmp \
 		&& curl -sL https://www.kernel.org/pub/software/scm/git/git-${GIT_VERSION}.tar.gz -o git.tgz \
 		&& tar zxf git.tgz \
 		&& cd git-${GIT_VERSION} \
 		&& ./configure --prefix=/usr \
-		&& NO_TCLTK=1 make install \
+		&& NO_TCLTK=1 INSTALL_SYMLINKS=1 make install \
 		&& rm -rf /var/lib/apt/lists/* \
 		&& rm -rf /tmp/* \
 		&& git --version
-
-FROM ubuntu:20.04
-
-RUN apt-get update \
-		&& DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends \
-					curl \
-					libexpat1 \
-					libpcre2-8-0 \
-					openssh-client \
-					perl \
-					zlib1g \
-		&& rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder /usr/libexec/git-core/git-* /usr/libexec/git-core/
-COPY --from=builder /usr/libexec/git-core/mergetools/* /usr/libexec/git-core/mergetools/
-COPY --from=builder /usr/bin/git-* /usr/bin/git /usr/bin/
-COPY --from=builder /usr/share/git-core /usr/share/git-core
 
 ENTRYPOINT [ "git" ]

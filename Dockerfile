@@ -1,5 +1,9 @@
 ARG REGISTRY=msyea
 ARG DOCKER_VERSION=latest
+ARG GIT_VERSION=latest
+
+FROM ${REGISTRY}/ubuntu-git:${GIT_VERSION} AS git
+
 FROM ${REGISTRY}/ubuntu-dind:${DOCKER_VERSION}
 
 # Docker release channel and version. Version is inherited from outside the
@@ -34,10 +38,13 @@ RUN adduser --home /home/rootless --gecos 'Rootless' --disabled-password rootles
 		echo 'rootless:100000:65536' >> /etc/subuid; \
 		echo 'rootless:100000:65536' >> /etc/subgid
 
+# Copy our version guess helper
+COPY version.sh /usr/local/bin/
+
 RUN \
   if [ "${DOCKER_CHANNEL}" = "stable" ]; then \
 		if [ "${DOCKER_VERSION}" = "latest" ] || printf %s\\n "${DOCKER_VERSION}" | grep -Eq '^[0-9a-f]{7}$'; then \
-			DOCKER_VERSION=$(wget -q -O - "https://raw.githubusercontent.com/docker-library/docker/master/versions.json"|grep '"version"'|head -n 1|sed -E 's/\s+"version"\s*:\s*"([^"]+)".*/\1/'); \
+			DOCKER_VERSION=$(version.sh "moby/moby"); \
 		fi; \
 	fi; \
 	\
@@ -77,9 +84,9 @@ VOLUME /home/rootless/.local/share/docker
 
 # Install Docker compose. Turn on compatibility mode when installing newer 2.x
 # branch.
-RUN if [ "$COMPOSE_VERSION" = "latest" ]; then COMPOSE_VERSION=$(wget -q -O - "${COMPOSE_ROOT%/}/tags"| grep -E '/docker/compose/releases/tag/v[0-9]' | grep -v rc  |  awk -F'[v\"]' '{print $3}' | head -1); fi; \
+RUN if [ "$COMPOSE_VERSION" = "latest" ]; then COMPOSE_VERSION=$(version.sh "docker/compose"); fi; \
 		if [ "${COMPOSE_VERSION%%.*}" -ge "2" ]; then \
-			if [ "$COMPOSE_SWITCH_VERSION" = "latest" ]; then COMPOSE_SWITCH_VERSION=$(wget -q -O - "${COMPOSE_SWITCH_ROOT%/}/tags"| grep -E '/docker/compose-switch/releases/tag/v[0-9]' | grep -v rc  |  awk -F'[v\"]' '{print $3}' | head -1); fi; \
+			if [ "$COMPOSE_SWITCH_VERSION" = "latest" ]; then COMPOSE_SWITCH_VERSION=$(version.sh "docker/compose-switch"); fi; \
 			mkdir -p /usr/lib/docker/cli-plugins; \
 			wget -q -O /usr/lib/docker/cli-plugins/docker-compose "${COMPOSE_ROOT%/}/releases/download/v${COMPOSE_VERSION#v*}/docker-compose-$(uname -s|tr '[:upper:]' '[:lower:]')-$(uname -m)" ; \
 			chmod a+x /usr/lib/docker/cli-plugins/docker-compose; \
@@ -100,36 +107,226 @@ RUN if [ "$COMPOSE_VERSION" = "latest" ]; then COMPOSE_VERSION=$(wget -q -O - "$
 		fi; \
 		docker-compose --version
 
-# Install and compile git. This will also install a few other packages, incl.
-# curl and tini (for process-tree control within containers).
+# Install git dependencies and git from image. This will also install a few
+# other packages, incl. curl and tini (for process-tree control within
+# containers).
 RUN apt-get update \
 		&& apt-get -y install \
 					awscli \
-					build-essential \
 					curl \
 					gettext \
 					jq \
-					libcurl4-openssl-dev \
+					libexpat1 \
+					libpcre2-8-0 \
+					openssh-client \
+					perl \
 					software-properties-common \
 					tini \
-					zlib1g-dev \
+					zlib1g \
 					zstd \
-		&& if [ "$GIT_VERSION" = "latest" ]; then GIT_VERSION=$(wget -q -O - "https://github.com/git/git/tags"| grep -E '/git/git/releases/tag/v[0-9]' | grep -v rc  |  awk -F'[v\"]' '{print $3}' | head -1); fi \
-		&& cd /tmp \
-		&& curl -sL https://www.kernel.org/pub/software/scm/git/git-${GIT_VERSION}.tar.gz -o git.tgz \
-		&& tar zxf git.tgz \
-		&& cd git-${GIT_VERSION} \
-		&& ./configure --prefix=/usr \
-		&& make \
-		&& make install \
-		&& rm -rf /var/lib/apt/lists/* \
-		&& rm -rf /tmp/* \
-		&& git --version
+		&& rm -rf /var/lib/apt/lists/*
+# Now... starts the fun! COPY resolves symlinks, which we want to avoid at all
+# price since that would generate a LARGE image. So, instead, we'll be
+# recreating all symlinks by hand, as make install did.
+
+# Start by copying the main git binaries.
+COPY --from=git /usr/bin/git* /usr/bin/
+# Add the few ones that are direct executables in the git-core directory. A
+# number of these are actually scripts.
+COPY --from=git \
+				/usr/libexec/git-core/git-add--interactive \
+				/usr/libexec/git-core/git-archimport \
+				/usr/libexec/git-core/git-bisect \
+				/usr/libexec/git-core/git-cvsexportcommit \
+				/usr/libexec/git-core/git-cvsimport \
+				/usr/libexec/git-core/git-daemon \
+				/usr/libexec/git-core/git-difftool--helper \
+				/usr/libexec/git-core/git-filter-branch \
+				/usr/libexec/git-core/git-http-backend \
+				/usr/libexec/git-core/git-http-fetch \
+				/usr/libexec/git-core/git-imap-send \
+				/usr/libexec/git-core/git-instaweb \
+				/usr/libexec/git-core/git-merge-octopus \
+				/usr/libexec/git-core/git-merge-one-file \
+				/usr/libexec/git-core/git-merge-resolve \
+				/usr/libexec/git-core/git-mergetool \
+				/usr/libexec/git-core/git-mergetool--lib \
+				/usr/libexec/git-core/git-p4 \
+				/usr/libexec/git-core/git-quiltimport \
+				/usr/libexec/git-core/git-remote-http \
+				/usr/libexec/git-core/git-request-pull \
+				/usr/libexec/git-core/git-send-email \
+				/usr/libexec/git-core/git-sh-i18n \
+				/usr/libexec/git-core/git-sh-i18n--envsubst \
+				/usr/libexec/git-core/git-sh-setup \
+				/usr/libexec/git-core/git-submodule \
+				/usr/libexec/git-core/git-svn \
+				/usr/libexec/git-core/git-web--browse \
+			/usr/libexec/git-core/
+# Now over to most of the links, make them point to the main git binary
+# (installed itself in /usr/bin)
+RUN cd /usr/libexec/git-core && for lname in \
+							git-add \
+							git-am \
+							git-annotate \
+							git-apply \
+							git-archive \
+							git-bisect--helper \
+							git-blame \
+							git-branch \
+							git-bugreport \
+							git-bundle \
+							git-cat-file \
+							git-check-attr \
+							git-check-ignore \
+							git-check-mailmap \
+							git-check-ref-format \
+							git-checkout \
+							git-checkout--worker \
+							git-checkout-index \
+							git-cherry \
+							git-cherry-pick \
+							git-clean \
+							git-clone \
+							git-column \
+							git-commit \
+							git-commit-graph \
+							git-commit-tree \
+							git-config \
+							git-count-objects \
+							git-credential \
+							git-credential-cache \
+							git-credential-cache--daemon \
+							git-credential-store \
+							git-describe \
+							git-diff \
+							git-diff-files \
+							git-diff-index \
+							git-diff-tree \
+							git-difftool \
+							git-env--helper \
+							git-fast-export \
+							git-fast-import \
+							git-fetch \
+							git-fetch-pack \
+							git-fmt-merge-msg \
+							git-for-each-ref \
+							git-for-each-repo \
+							git-format-patch \
+							git-fsck \
+							git-fsck-objects \
+							git-gc \
+							git-get-tar-commit-id \
+							git-grep \
+							git-hash-object \
+							git-help \
+							git-index-pack \
+							git-init \
+							git-init-db \
+							git-interpret-trailers \
+							git-log \
+							git-ls-files \
+							git-ls-remote \
+							git-ls-tree \
+							git-mailinfo \
+							git-mailsplit \
+							git-maintenance \
+							git-merge \
+							git-merge-base \
+							git-merge-file \
+							git-merge-index \
+							git-merge-ours \
+							git-merge-recursive \
+							git-merge-subtree \
+							git-merge-tree \
+							git-mktag \
+							git-mktree \
+							git-multi-pack-index \
+							git-mv \
+							git-name-rev \
+							git-notes \
+							git-pack-objects \
+							git-pack-redundant \
+							git-pack-refs \
+							git-patch-id \
+							git-prune \
+							git-prune-packed \
+							git-pull \
+							git-push \
+							git-range-diff \
+							git-read-tree \
+							git-rebase \
+							git-receive-pack \
+							git-reflog \
+							git-remote \
+							git-remote-ext \
+							git-remote-fd \
+							git-remote-ftp \
+							git-remote-ftps \
+							git-remote-https \
+							git-repack \
+							git-replace \
+							git-rerere \
+							git-reset \
+							git-restore \
+							git-rev-list \
+							git-rev-parse \
+							git-revert \
+							git-rm \
+							git-send-pack \
+ 							git-shortlog \
+							git-show \
+							git-show-branch \
+							git-show-index \
+							git-show-ref \
+							git-sparse-checkout \
+							git-stage \
+							git-stash \
+							git-status \
+							git-stripspace \
+							git-submodule--helper \
+							git-switch \
+							git-symbolic-ref \
+							git-tag \
+							git-unpack-file \
+							git-unpack-objects \
+							git-update-index \
+							git-update-ref \
+							git-update-server-info \
+							git-upload-archive \
+							git-upload-pack \
+							git-var \
+							git-verify-commit \
+							git-verify-pack \
+							git-verify-tag \
+							git-whatchanged \
+							git-worktree \
+							git-write-tree; do \
+					ln -sf ../../bin/git "$lname"; \
+				done
+# Some links are inside the git-core directory (git-remove-http implements all
+# protocols).
+RUN cd /usr/libexec/git-core && for lname in \
+							git-remote-ftp \
+							git-remote-ftps \
+							git-remote-https; do \
+					ln -sf "git-remote-http" "$lname"; \
+				done
+# A few /usr/bin/ binaries also want to exist in git-core.
+RUN cd /usr/libexec/git-core && for lname in \
+							git \
+							git-cvsserver \
+							git-shell; do \
+					ln -sf "../../bin/$lname" "$lname"; \
+				done
+# Complete the git installation, skip the web stuff
+COPY --from=git /usr/libexec/git-core/mergetools/* /usr/libexec/git-core/mergetools/
+COPY --from=git /usr/share/git-core /usr/share/git-core
 
 WORKDIR /actions-runner
 RUN chown rootless:rootless /actions-runner
 USER rootless
-RUN if [ "$GH_RUNNER_VERSION" = "latest" ]; then GH_RUNNER_VERSION=$(wget -q -O - "https://raw.githubusercontent.com/actions/runner/main/src/runnerversion"); fi \
+RUN if [ "$GH_RUNNER_VERSION" = "latest" ]; then GH_RUNNER_VERSION=$(version.sh "actions/runner"); fi \
 		&& wget -q -O actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz https://github.com/actions/runner/releases/download/v${GH_RUNNER_VERSION#v*}/actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
 		&& tar xzf ./actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
 		&& rm -f ./actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz
