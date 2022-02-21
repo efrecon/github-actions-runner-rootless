@@ -7,7 +7,7 @@ on:
 jobs:
   docker:
     name: Check for New Releases of Docker Engine
-    uses: ./.github/workflows/_release.yml
+    uses: efrecon/github-actions-runner-rootless/.github/workflows/_release.yml@feature/git-image
     with:
       project: moby/moby
       action: ./.github/actions/docker
@@ -18,7 +18,7 @@ jobs:
 
   git:
     name: Check for New Releases of git
-    uses: ./.github/workflows/_release.yml
+    uses: efrecon/github-actions-runner-rootless/.github/workflows/_release.yml@feature/git-image
     with:
       project: git/git
       action: ./.github/actions/git
