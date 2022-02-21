@@ -39,3 +39,4 @@ jobs:
         with:
           registry: ghcr.io/${{ github.repository }}
           docker: ${{ steps.docker.outputs.version }}
+          git: ${{ steps.git.outputs.version }}

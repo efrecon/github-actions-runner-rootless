@@ -16,6 +16,11 @@ inputs:
     description: |
       The version of the Docker engine and rootless tools to use when
       building the image. Cannot be empty.
+  git:
+    required: false
+    default: 2.35.1
+    description: |
+      The version of git to use when building the image. Cannot be empty.
   runner:
     required: false
     description: |
@@ -65,6 +70,7 @@ runs:
         build-args: |
           REGISTRY=${{ inputs.registry }}
           DOCKER_VERSION=${{ inputs.docker }}
+          GIT_VERSION=${{ inputs.git }}
           GH_RUNNER_VERSION=${{ env.RUNNER_VERSION }}
         cache-from: type=gha
         cache-to: type=gha,mode=max

@@ -7,84 +7,31 @@ on:
 jobs:
   docker:
     name: Check for New Releases of Docker Engine
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.semver.outputs.version }}
-    env:
-      HAVE_ACCESS: ${{ secrets.DOCKERHUB_USERNAME != '' }}
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v2
+    uses: ./.github/workflows/release.yml
+    with:
+      project: moby/moby
+      action: ./.github/actions/docker
+      image: ubuntu-dind
+    secrets:
+      username: ${{ secrets.DOCKERHUB_USERNAME }}
+      password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Detect Official latest non-prerelease version of the Docker engine
-      # (as a pure SemVer).
-      - name: Docker Release Version
-        id: version
-        uses: pozetroninc/github-action-get-latest-release@v0.5.0
-        with:
-          repository: moby/moby
-          excludes: prerelease, draft
-      - name: Docker SemVer
-        id: semver
-        shell: bash
-        run: |
-          DOCKER_VERSION=${{ steps.version.outputs.release }}
-          echo 'DOCKER_VERSION='${DOCKER_VERSION#v*} >> $GITHUB_ENV
-          echo "::set-output name=version::${DOCKER_VERSION#v*}"
-
-      # Publish containers to the GHCR tagged with the latest version of the
-      # Docker engine, if they do not already exist.
-      - name: Login to GHCR
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Check Images Presence
-        shell: bash
-        id: ghcr
-        run: |
-          if docker image pull -q ghcr.io/${{ github.repository }}/ubuntu-dind:${{ env.DOCKER_VERSION }}; then
-            echo "::set-output name=present::true"
-          else
-            echo "::set-output name=present::false"
-          fi
-      - name: Publish Images to GHCR
-        if: steps.ghcr.outputs.present == 'false'
-        uses: ./.github/actions/docker
-        with:
-          registry: ghcr.io/${{ github.repository }}
-          version: ${{ env.DOCKER_VERSION }}
-
-      # Publish containers to the DockerHub tagged with the latest version of
-      # the Docker engine and of the action runner. This only happens if a
-      # DOCKERHUB_USERNAME is set.
-      - name: Login to DockerHub
-        if: env.HAVE_ACCESS == 'true'
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Check Images Presence
-        if: env.HAVE_ACCESS == 'true'
-        shell: bash
-        id: dockerhub
-        run: |
-          if docker image pull -q ${{ github.repository_owner }}/ubuntu-dind:${{ env.DOCKER_VERSION }}; then
-            echo "::set-output name=present::true"
-          else
-            echo "::set-output name=present::false"
-          fi
-      - name: Publish Images to DockerHub
-        if: env.HAVE_ACCESS == 'true' && steps.dockerhub.outputs.present == 'false'
-        uses: ./.github/actions/docker
-        with:
-          registry: ${{ github.repository_owner }}
-          version: ${{ env.DOCKER_VERSION }}
+  git:
+    name: Check for New Releases of git
+    uses: ./.github/workflows/release.yml
+    with:
+      project: git/git
+      action: ./.github/actions/git
+      image: ubuntu-git
+    secrets:
+      username: ${{ secrets.DOCKERHUB_USERNAME }}
+      password: ${{ secrets.DOCKERHUB_TOKEN }}
 
   runner:
     name: Check for New Releases of GH Actions Runner
-    needs: docker
+    needs:
+      - docker
+      - git
     runs-on: ubuntu-latest
     env:
       HAVE_ACCESS: ${{ secrets.DOCKERHUB_USERNAME != '' }}
@@ -94,29 +41,20 @@ jobs:
 
       # Detect Official latest non-prerelease version of the GH actions runner
       # (as a pure SemVer).
-      - name: Runner Release Version
-        id: runner
-        uses: pozetroninc/github-action-get-latest-release@v0.5.0
-        with:
-          repository: actions/runner
-          excludes: prerelease, draft
       - name: Runner SemVer
         id: semver
-        shell: bash
-        run: |
-          GH_RUNNER_VERSION=${{ steps.runner.outputs.release }}
-          echo 'GH_RUNNER_VERSION='${GH_RUNNER_VERSION#v*} >> $GITHUB_ENV
-          echo "::set-output name=version::${GH_RUNNER_VERSION#v*}"
+        uses: ./.github/actions/version
+        with:
+          project: actions/runner
 
       # Detect our own latest release. This might fail if there are no release
       # yet, but we'll continue anyway as this is a corner case.
       - name: Own Release Version
         id: own
         continue-on-error: true
-        uses: pozetroninc/github-action-get-latest-release@v0.5.0
+        uses: ./.github/actions/version
         with:
-          repository: ${{ github.repository }}
-          excludes: prerelease, draft
+          project: ${{ github.repository }}
 
       # Now, all steps below will be executed only if our latest release is
       # different from the official GH action runner release. Meaning, a new
@@ -131,12 +69,13 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish Image to GHCR
-        if: steps.semver.outputs.version != steps.own.outputs.release
+        if: steps.semver.outputs.version != steps.own.outputs.version
         uses: ./.github/actions/runner
         with:
           registry: ghcr.io/${{ github.repository }}
           docker: ${{ needs.docker.outputs.version }}
-          runner: ${{ env.GH_RUNNER_VERSION }}
+          git: ${{ needs.git.outputs.version }}
+          runner: ${{ steps.semver.outputs.version }}
           latest: "true"
 
       # Publish containers to the DockerHub tagged with the latest version of
@@ -149,12 +88,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Publish Images to DockerHub
-        if: env.HAVE_ACCESS == 'true' && steps.semver.outputs.version != steps.own.outputs.release
+        if: env.HAVE_ACCESS == 'true' && steps.semver.outputs.version != steps.own.outputs.version
         uses: ./.github/actions/runner
         with:
           registry: ${{ github.repository_owner }}
           docker: ${{ needs.docker.outputs.version }}
-          runner: ${{ env.GH_RUNNER_VERSION }}
+          git: ${{ needs.git.outputs.version }}
+          runner: ${{ steps.semver.outputs.version }}
           latest: "true"
 
       # Create a release at GitHub, this arranges for the comparison step to
@@ -162,7 +102,7 @@ jobs:
       # Docker image publication steps have succeeded. Release name contains
       # leading `v`, release tag **without** the leading `v`.
       - name: Create Release
-        if: steps.semver.outputs.version != steps.own.outputs.release
+        if: steps.semver.outputs.version != steps.own.outputs.version
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.GH_RUNNER_VERSION }}
