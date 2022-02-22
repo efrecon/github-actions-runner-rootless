@@ -186,6 +186,7 @@ jobs:
           registry: ghcr.io/${{ github.repository }}
           version: ${{ steps.semver.outputs.version }}
           platforms: linux/amd64
+          image: ubuntu-git
           variable: GIT_VERSION
           dockerfile: ./Dockerfile.git
 
@@ -210,6 +211,7 @@ jobs:
           registry: ${{ github.repository_owner }}
           version: ${{ steps.semver.outputs.version }}
           platforms: linux/amd64
+          image: ubuntu-git
           variable: GIT_VERSION
           dockerfile: ./Dockerfile.git
           image: ubuntu-git
