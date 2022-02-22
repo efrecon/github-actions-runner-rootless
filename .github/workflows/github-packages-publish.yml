@@ -56,7 +56,7 @@ jobs:
         with:
           registry: ghcr.io/${{ github.repository }}
           platforms: linux/amd64
-          image: ubuntu-git
+          image: github-actions-runner
           variable: GH_RUNNER_VERSION
           dockerfile: ./Dockerfile
           build-args: |
