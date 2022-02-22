@@ -16,6 +16,12 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v2
 
+      # Compute git short SHA, as ${{ github.sha }} is the long one.
+      - name: Git short SHA
+        id: sha
+        shell: bash
+        run: printf '::set-output name=sha::%s\n' "$(git rev-parse --short HEAD)"
+
       - name: Release Version
         id: semver
         uses: ./.github/actions/version
@@ -34,7 +40,7 @@ jobs:
         shell: bash
         id: ghcr
         run: |
-          if docker image pull -q ghcr.io/${{ github.repository }}/ubuntu-dind:${{ steps.semver.outputs.version }}-${{ github.sha }}; then
+          if docker image pull -q ghcr.io/${{ github.repository }}/ubuntu-dind:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}; then
             echo "::set-output name=present::true"
           else
             echo "::set-output name=present::false"
@@ -59,7 +65,7 @@ jobs:
         shell: bash
         id: dockerhub
         run: |
-          if docker image pull -q ${{ github.repository_owner }}/ubuntu-dind:${{ steps.semver.outputs.version }}-${{ github.sha }}; then
+          if docker image pull -q ${{ github.repository_owner }}/ubuntu-dind:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}; then
             echo "::set-output name=present::true"
           else
             echo "::set-output name=present::false"
@@ -83,6 +89,12 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v2
 
+      # Compute git short SHA, as ${{ github.sha }} is the long one.
+      - name: Git short SHA
+        id: sha
+        shell: bash
+        run: printf '::set-output name=sha::%s\n' "$(git rev-parse --short HEAD)"
+
       - name: Release Version
         id: semver
         uses: ./.github/actions/version
@@ -101,7 +113,7 @@ jobs:
         shell: bash
         id: ghcr
         run: |
-          if docker image pull -q ghcr.io/${{ github.repository }}/ubuntu-git:${{ steps.semver.outputs.version }}-${{ github.sha }}; then
+          if docker image pull -q ghcr.io/${{ github.repository }}/ubuntu-git:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}; then
             echo "::set-output name=present::true"
           else
             echo "::set-output name=present::false"
@@ -126,7 +138,7 @@ jobs:
         shell: bash
         id: dockerhub
         run: |
-          if docker image pull -q ${{ github.repository_owner }}/ubuntu-git:${{ steps.semver.outputs.version }}-${{ github.sha }}; then
+          if docker image pull -q ${{ github.repository_owner }}/ubuntu-git:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}; then
             echo "::set-output name=present::true"
           else
             echo "::set-output name=present::false"
@@ -149,6 +161,12 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
+
+      # Compute git short SHA, as ${{ github.sha }} is the long one.
+      - name: Git short SHA
+        id: sha
+        shell: bash
+        run: printf '::set-output name=sha::%s\n' "$(git rev-parse --short HEAD)"
 
       # Detect Official latest non-prerelease version of the GH actions runner
       # (as a pure SemVer).
@@ -183,7 +201,7 @@ jobs:
         shell: bash
         id: ghcr
         run: |
-          if docker image pull -q ghcr.io/${{ github.repository }}/github-actions-runner:${{ steps.semver.outputs.version }}-${{ github.sha }}; then
+          if docker image pull -q ghcr.io/${{ github.repository }}/github-actions-runner:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}; then
             echo "::set-output name=present::true"
           else
             echo "::set-output name=present::false"
@@ -212,7 +230,7 @@ jobs:
         shell: bash
         id: dockerhub
         run: |
-          if docker image pull -q ${{ github.repository_owner }}/github-actions-runner:${{ steps.semver.outputs.version }}-${{ github.sha }}; then
+          if docker image pull -q ${{ github.repository_owner }}/github-actions-runner:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}; then
             echo "::set-output name=present::true"
           else
             echo "::set-output name=present::false"

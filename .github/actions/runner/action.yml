@@ -36,6 +36,12 @@ inputs:
 runs:
   using: composite
   steps:
+    # Compute git short SHA, as ${{ steps.sha.outputs.sha }} is the long one.
+    - name: Git short SHA
+      id: sha
+      shell: bash
+      run: printf '::set-output name=sha::%s\n' "$(git rev-parse --short HEAD)"
+
     # Guess the versions to use out of the values of the inputs and store these
     # in the environment.
     # + RUNNER_VERSION will be the incoming semver, or "latest" (e.g. current
@@ -48,10 +54,10 @@ runs:
       run: |
         if [ -n "${{ inputs.runner }}" ]; then
           printf RUNNER_VERSION=%s\\n "${{ inputs.runner }}" >> "$GITHUB_ENV"
-          printf RUNNER_VERSION_GITREF=%s-%s\\n "${{ inputs.version }}" "${{ github.sha }}" >> "$GITHUB_ENV"
+          printf RUNNER_VERSION_GITREF=%s-%s\\n "${{ inputs.runner }}" "${{ steps.sha.outputs.sha }}" >> "$GITHUB_ENV"
         else
-          printf RUNNER_VERSION=%s\\n "${{ github.sha }}" >> "$GITHUB_ENV"
-          printf RUNNER_VERSION_GITREF=%s\\n "${{ github.sha }}" >> "$GITHUB_ENV"
+          printf RUNNER_VERSION=%s\\n "${{ steps.sha.outputs.sha }}" >> "$GITHUB_ENV"
+          printf RUNNER_VERSION_GITREF=%s\\n "${{ steps.sha.outputs.sha }}" >> "$GITHUB_ENV"
         fi
 
     # Setup multi-platform support for Docker build
@@ -72,8 +78,8 @@ runs:
         push: true
         build-args: |
           REGISTRY=${{ inputs.registry }}
-          DOCKER_VERSION=${{ inputs.docker }}-${{ github.sha }}
-          GIT_VERSION=${{ inputs.git }}-${{ github.sha }}
+          DOCKER_VERSION=${{ inputs.docker }}-${{ steps.sha.outputs.sha }}
+          GIT_VERSION=${{ inputs.git }}-${{ steps.sha.outputs.sha }}
           GH_RUNNER_VERSION=${{ env.RUNNER_VERSION }}
         cache-from: type=gha
         cache-to: type=gha,mode=max

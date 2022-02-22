@@ -36,6 +36,11 @@ outputs:
 runs:
   using: composite
   steps:
+    # Compute git short SHA, as ${{ github.sha }} is the long one.
+    - name: Git short SHA
+      id: sha
+      shell: bash
+      run: printf '::set-output name=sha::%s\n' "$(git rev-parse --short HEAD)"
     # Guess the versions to use out of the values of the inputs and store these
     # in the environment.
     # + DOCKER_VERSION will be the incoming semver, or the git short SHA
@@ -48,10 +53,10 @@ runs:
       run: |
         if [ -n "${{ inputs.version }}" ]; then
           printf DOCKER_VERSION=%s\\n "${{ inputs.version }}" >> "$GITHUB_ENV"
-          printf DOCKER_VERSION_GITREF=%s-%s\\n "${{ inputs.version }}" "${{ github.sha }}" >> "$GITHUB_ENV"
+          printf DOCKER_VERSION_GITREF=%s-%s\\n "${{ inputs.version }}" "${{ steps.sha.outputs.sha }}" >> "$GITHUB_ENV"
         else
-          printf DOCKER_VERSION=%s\\n "${{ github.sha }}" >> "$GITHUB_ENV"
-          printf DOCKER_VERSION_GITREF=%s\\n "${{ github.sha }}" >> "$GITHUB_ENV"
+          printf DOCKER_VERSION=%s\\n "${{ steps.sha.outputs.sha }}" >> "$GITHUB_ENV"
+          printf DOCKER_VERSION_GITREF=%s\\n "${{ steps.sha.outputs.sha }}" >> "$GITHUB_ENV"
         fi
     # Set the output version.
     - name: Output version
