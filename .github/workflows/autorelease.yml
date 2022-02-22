@@ -59,8 +59,8 @@ jobs:
       variable: GH_RUNNER_VERSION
       dockerfile: ./Dockerfile
       build-args: |
-        DOCKER_VERSION=${{ needs.dind.outputs.version }}-${{ steps.sha.outputs.sha }}
-        GIT_VERSION=${{ needs.git.outputs.version }}-${{ steps.sha.outputs.sha }}
+        DOCKER_VERSION=${{ needs.dind.outputs.version }}
+        GIT_VERSION=${{ needs.git.outputs.version }}
       latest: ${{ github.ref == 'refs/head/main' }}
     secrets:
       username: ${{ secrets.DOCKERHUB_USERNAME }}

@@ -57,8 +57,9 @@ inputs:
 outputs:
   version:
     description:
-      Version of git that was passed to the build stage, i.e. either the git
-      short sha, or the incoming (request) semver.
+      Version/tag of Docker image that was generated, i.e. either the short git
+      SHA, or the tag formed by the official version of the package bundled to
+      the git sha from this project.
     value: ${{ steps.output.outputs.version }}
 
 runs:
@@ -84,14 +85,14 @@ runs:
           printf PKG_VERSION=%s\\n "${{ inputs.version }}" >> "$GITHUB_ENV"
           printf PKG_VERSION_GITREF=%s-%s\\n "${{ inputs.version }}" "${{ steps.sha.outputs.sha }}" >> "$GITHUB_ENV"
         else
-          printf PKG_VERSION=%s\\n "$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+          printf PKG_VERSION=%s\\n "${{ steps.sha.outputs.sha }}" >> "$GITHUB_ENV"
           printf PKG_VERSION_GITREF=%s\\n "${{ steps.sha.outputs.sha }}" >> "$GITHUB_ENV"
         fi
     # Set the output version.
     - name: Output version
       id: output
       shell: bash
-      run: echo "::set-output name=version::${{ env.PKG_VERSION }}"
+      run: echo "::set-output name=version::${{ env.PKG_VERSION_GITREF }}"
 
     # Setup multi-platform support for Docker build
     - name: Set up QEMU
