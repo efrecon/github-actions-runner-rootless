@@ -51,6 +51,7 @@ jobs:
         with:
           registry: ghcr.io/${{ github.repository }}
           version: ${{ steps.semver.outputs.version }}
+          platforms: linux/amd64
 
       # Publish containers to the DockerHub tagged with the latest version. This
       # only happens if a DOCKERHUB_USERNAME is set.
@@ -76,6 +77,7 @@ jobs:
         with:
           registry: ${{ github.repository_owner }}
           version: ${{ steps.semver.outputs.version }}
+          platforms: linux/amd64
 
 
   git:
@@ -124,6 +126,7 @@ jobs:
         with:
           registry: ghcr.io/${{ github.repository }}
           version: ${{ steps.semver.outputs.version }}
+          platforms: linux/amd64
 
       # Publish containers to the DockerHub tagged with the latest version. This
       # only happens if a DOCKERHUB_USERNAME is set.
@@ -149,6 +152,7 @@ jobs:
         with:
           registry: ${{ github.repository_owner }}
           version: ${{ steps.semver.outputs.version }}
+          platforms: linux/amd64
 
   runner:
     name: GH Actions Runner
@@ -167,6 +171,17 @@ jobs:
         id: sha
         shell: bash
         run: printf '::set-output name=sha::%s\n' "$(git rev-parse --short HEAD)"
+
+      # We will make produced images "latest" whenever on the main branch.
+      - name: Main branch?
+        id: main
+        shell: bash
+        run: |
+          if printf %s\\n "${{ github.ref }}" | grep -Eq 'refs/head/main$'; then
+            echo "::set-output name=latest::true"
+          else
+            echo "::set-output name=latest::false"
+          fi
 
       # Detect Official latest non-prerelease version of the GH actions runner
       # (as a pure SemVer).
@@ -214,7 +229,8 @@ jobs:
           docker: ${{ needs.docker.outputs.version }}
           git: ${{ needs.git.outputs.version }}
           runner: ${{ steps.semver.outputs.version }}
-          latest: "true"
+          latest: ${{ steps.main.outputs.latest }}
+          platforms: linux/amd64
 
       # Publish containers to the DockerHub tagged with the latest version of
       # the Docker engine and of the action runner. This only happens if a
@@ -243,7 +259,8 @@ jobs:
           docker: ${{ needs.docker.outputs.version }}
           git: ${{ needs.git.outputs.version }}
           runner: ${{ steps.semver.outputs.version }}
-          latest: "true"
+          latest: ${{ steps.main.outputs.latest }}
+          platforms: linux/amd64
 
       # Create a release at GitHub, this arranges for the comparison step to
       # work next time. Release is created last, so it acts as a marker that

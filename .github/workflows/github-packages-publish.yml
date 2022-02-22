@@ -29,14 +29,17 @@ jobs:
         id: docker
         with:
           registry: ghcr.io/${{ github.repository }}
+          platforms: linux/amd64
       - name: Build and Push git Images
         uses: ./.github/actions/git
         id: git
         with:
           registry: ghcr.io/${{ github.repository }}
+          platforms: linux/amd64
       - name: Build and Push Runner Images
         uses: ./.github/actions/runner
         with:
           registry: ghcr.io/${{ github.repository }}
           docker: ${{ steps.docker.outputs.version }}
           git: ${{ steps.git.outputs.version }}
+          platforms: linux/amd64

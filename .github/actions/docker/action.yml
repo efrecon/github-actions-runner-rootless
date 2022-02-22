@@ -25,6 +25,13 @@ inputs:
     description: |
       When set to `true` this will arrange to make the images generated the
       `latest` one.
+  platforms:
+    required: false
+    default: linux/amd64,linux/arm64
+    description: |
+      The comma-separated list of platforms to build for. This list should be
+      compatible with the docker/build-push-action@v2 action, and all
+      architectures supported within the Dockerfiles, if relevant.
 
 outputs:
   version:
@@ -80,7 +87,7 @@ runs:
         tags: |
           ${{ inputs.registry }}/ubuntu-docker:${{ env.DOCKER_VERSION }}
           ${{ inputs.registry }}/ubuntu-docker:${{ env.DOCKER_VERSION_GITREF }}
-        platforms: linux/amd64,linux/arm64
+        platforms: ${{ inputs.platforms }}
         build-args: |
           DOCKER_VERSION=${{ env.DOCKER_VERSION }}
         push: true
@@ -94,7 +101,7 @@ runs:
         tags: |
           ${{ inputs.registry }}/ubuntu-dind:${{ env.DOCKER_VERSION }}
           ${{ inputs.registry }}/ubuntu-dind:${{ env.DOCKER_VERSION_GITREF }}
-        platforms: linux/amd64,linux/arm64
+        platforms: ${{ inputs.platforms }}
         push: true
         build-args: |
           REGISTRY=${{ inputs.registry }}
