@@ -122,11 +122,13 @@ jobs:
           fi
       - name: Publish Images to GHCR
         if: steps.ghcr.outputs.present == 'false'
-        uses: ./.github/actions/git
+        uses: ./.github/actions/image
         with:
           registry: ghcr.io/${{ github.repository }}
           version: ${{ steps.semver.outputs.version }}
           platforms: linux/amd64
+          variable: GIT_VERSION
+          dockerfile: ./Dockerfile.git
 
       # Publish containers to the DockerHub tagged with the latest version. This
       # only happens if a DOCKERHUB_USERNAME is set.
@@ -148,11 +150,13 @@ jobs:
           fi
       - name: Publish Images to DockerHub
         if: env.HAVE_ACCESS == 'true' && steps.dockerhub.outputs.present == 'false'
-        uses: ./.github/actions/git
+        uses: ./.github/actions/image
         with:
           registry: ${{ github.repository_owner }}
           version: ${{ steps.semver.outputs.version }}
           platforms: linux/amd64
+          variable: GIT_VERSION
+          dockerfile: ./Dockerfile.git
 
   runner:
     name: GH Actions Runner
