@@ -5,6 +5,19 @@ on:
     - cron: "0 0 * * *"
 
 jobs:
+  moby:
+    name: Docker (moby)
+    uses: ./github/workflows/_release.yml
+    with:
+      project: moby/moby
+      image: ubuntu-docker
+      platforms: linux/amd64
+      variable: DOCKER_VERSION
+      dockerfile: ./Dockerfile.docker
+    secrets:
+      username: ${{ secrets.DOCKERHUB_USERNAME }}
+      password: ${{ secrets.DOCKERHUB_TOKEN }}
+
   docker:
     name: Docker (moby)
     runs-on: ubuntu-latest

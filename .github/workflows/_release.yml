@@ -1,0 +1,96 @@
+name: Generic Release
+on:
+  workflow_call:
+    inputs:
+      project:
+        type: string
+        required: true
+      image:
+        type: string
+        required: true
+      platforms:
+        type: string
+        required: false
+        default: linux/amd64,linux/arm64
+      variable:
+        type: string
+        required: true
+      dockerfile:
+        type: string
+        required: true
+    secrets:
+      username:
+      password:
+
+jobs:
+  build:
+    name: Build tagged image
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.semver.outputs.version }}
+    env:
+      HAVE_ACCESS: ${{ secrets.username != '' }}
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      # Compute git short SHA, as ${{ github.sha }} is the long one.
+      - name: Git short SHA
+        id: sha
+        shell: bash
+        run: printf '::set-output name=sha::%s\n' "$(git rev-parse --short HEAD)"
+
+      - name: Release Version
+        id: semver
+        uses: ./.github/actions/version
+        with:
+          project: ${{ inputs.project }}
+
+      # Publish containers to the GHCR tagged with the latest version, if they
+      # do not already exist.
+      - name: Login to GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check Images Presence
+        id: ghcr
+        uses: ./.github/actions/presence
+        with:
+          image: ghcr.io/${{ github.repository }}/${{ inputs.image }}:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}
+      - name: Publish Images to GHCR
+        if: steps.ghcr.outputs.present == 'false'
+        uses: ./.github/actions/image
+        with:
+          registry: ghcr.io/${{ github.repository }}
+          version: ${{ steps.semver.outputs.version }}
+          platforms: ${{ inputs.platforms }}
+          image: ${{ inputs.image }}
+          variable: ${{ inputs.variable }}
+          dockerfile: ${{ inputs.dockerfile }}
+
+      # Publish containers to the DockerHub tagged with the latest version. This
+      # only happens if a DOCKERHUB_USERNAME is set.
+      - name: Login to DockerHub
+        if: env.HAVE_ACCESS == 'true'
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.username }}
+          password: ${{ secrets.password }}
+      - name: Check Images Presence
+        if: env.HAVE_ACCESS == 'true'
+        id: dockerhub
+        uses: ./.github/actions/presence
+        with:
+          image: ${{ github.repository_owner }}/${{ inputs.image }}:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}
+      - name: Publish Images to DockerHub
+        if: env.HAVE_ACCESS == 'true' && steps.dockerhub.outputs.present == 'false'
+        uses: ./.github/actions/image
+        with:
+          registry: ${{ github.repository_owner }}
+          version: ${{ steps.semver.outputs.version }}
+          platforms: ${{ inputs.platforms }}
+          image: ${{ inputs.image }}
+          variable: ${{ inputs.variable }}
+          dockerfile: ${{ inputs.dockerfile }}
