@@ -5,6 +5,27 @@ FROM ubuntu:20.04
 # the time of the build.
 ARG GIT_VERSION="latest"
 
+# Build arguments for OCI-oriented information
+ARG OCI_GITHUB=https://github.com/msyea/github-actions-runner-rootless
+ARG OCI_ORG=msyea
+ARG OCI_SHA=
+ARG OCI_BRANCH=main
+ARG OCI_DOCKERFILE=Dockerfile.git
+ARG OCI_RFC3339=
+
+# Dynamic OCI Labels
+LABEL org.opencontainers.image.authors="Simon Mayes <https://github.com/msyea>, Emmanuel Frécon <https://github.com/efrecon>"
+LABEL org.opencontainers.image.url="${OCI_GITHUB}"
+LABEL org.opencontainers.image.documentation="${OCI_GITHUB}"
+LABEL org.opencontainers.image.source="${OCI_GITHUB}/blob/${OCI_BRANCH}/${OCI_DOCKERFILE}"
+LABEL org.opencontainers.image.vendor="${OCI_ORG}"
+LABEL org.opencontainers.image.version="${GIT_VERSION}"
+LABEL org.opencontainers.image.revision="${OCI_SHA}"
+LABEL org.opencontainers.image.license="MIT"
+LABEL org.opencontainers.image.title="Minimal git client"
+LABEL org.opencontainers.image.description="Self-compiled git client based on Ubuntu."
+LABEL org.opencontainers.image.created="${OCI_RFC3339}"
+
 # Copy our version guess helper
 COPY utils/version.sh utils/install-git.sh /usr/local/bin/
 

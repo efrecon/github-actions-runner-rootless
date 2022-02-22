@@ -98,6 +98,14 @@ runs:
       shell: bash
       run: echo "::set-output name=version::${{ env.PKG_VERSION_GITREF }}"
 
+    # Discover dynamic variables for OCI labels
+    - name: Dynamic runtime Context
+      id: runtime
+      shell: bash
+      run: |
+        printf '::set-output name=now::%s\n' "$(date --iso-8601=seconds)"
+        printf '::set-output name=branch::%s\n' "$(printf %s\\n "${{github.ref}}"|sed -E 's~refs/heads/~~')"
+
     # Setup multi-platform support for Docker build
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v1
@@ -105,8 +113,7 @@ runs:
       uses: docker/setup-buildx-action@v1
 
     # Build and Push the image to the remote registry, in turns.
-    - name: Build/Push git to Registry
-      id: git
+    - name: Build/Push image to Registry
       uses: docker/build-push-action@v2
       with:
         file: ${{ inputs.dockerfile }}
@@ -115,11 +122,16 @@ runs:
         platforms: ${{ inputs.platforms }}
         push: true
         build-args: |
+          OCI_GITHUB=https://github.com/${{ github.repository }}
+          OCI_ORG=${{ github.repository_owner }}
+          OCI_SHA=${{ github.sha }}
+          OCI_BRANCH=${{ steps.runtime.outputs.branch }}
+          OCI_RFC3339=${{ steps.runtime.outputs.now }}
           REGISTRY=${{ inputs.registry }}
           ${{ inputs.variable }}=${{ env.PKG_VERSION }}
           ${{ inputs.build-args }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-from: type=gha,scope=${{ github.repository}}-${{ github.workflow }}-${{ github.job }}
+        cache-to: type=gha,mode=max,scope=${{ github.repository}}-${{ github.workflow }}-${{ github.job }}
 
     - name: Make image primary release
       if: env.PKG_VERSION_GITREF != env.PKG_VERSION
