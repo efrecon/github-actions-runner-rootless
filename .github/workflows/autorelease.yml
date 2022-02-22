@@ -103,7 +103,11 @@ jobs:
           tag_name: ${{ steps.semver.outputs.version }}
           name: v${{ steps.semver.outputs.version }}
           body: |
-            Automatic release to match new GH Actions runner [release](https://github.com/actions/runner/releases/tag/v${{ env.GH_RUNNER_VERSION }}).
-            See all versions and pull instructions [here](https://github.com/${{ github.repository }}/pkgs/container/github-actions-runner-rootless%2Fgithub-actions-runner)
+            Automatic release to match new GH Actions runner [release]. See all
+            versions and pull instructions [here][images]. Main generated GHCR
+            image called `${{ needs.runner.outputs.image }}`.
+
+              [release]: https://github.com/actions/runner/releases/tag/v${{ steps.semver.outputs.version }}
+              [images]: https://github.com/${{ github.repository }}/pkgs/container/github-actions-runner-rootless%2Fgithub-actions-runner
           draft: false
           prerelease: false
