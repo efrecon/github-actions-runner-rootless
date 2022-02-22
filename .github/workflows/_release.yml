@@ -78,6 +78,9 @@ jobs:
     outputs:
       version: ${{ steps.semver.outputs.version }}
       image: ${{ steps.push.outputs.image }}
+    # Secrets are not available to `if`. Instead, we create an environment
+    # variable holding a boolean telling if the username for access to the
+    # DockerHub is empty or not.
     env:
       HAVE_ACCESS: ${{ secrets.username != '' }}
     steps:
@@ -90,6 +93,10 @@ jobs:
         shell: bash
         run: printf '::set-output name=sha::%s\n' "$(git rev-parse --short HEAD)"
 
+      # Actively use the information from GitHub to acquire the latest, stable
+      # release version of the corresponding project. For all projects that are
+      # of interest to us, this action returns a pure SemVer, formatted as
+      # `major.minor.patch` (no leading `v`).
       - name: Release Version
         id: semver
         uses: ./.github/actions/version
