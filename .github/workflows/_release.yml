@@ -21,6 +21,10 @@ on:
       build-args:
         type: string
         required: false
+      latest:
+        type: string
+        required: false
+        default: "false"
     secrets:
       username:
         required: false
@@ -77,6 +81,7 @@ jobs:
           image: ${{ inputs.image }}
           variable: ${{ inputs.variable }}
           dockerfile: ${{ inputs.dockerfile }}
+          latest: ${{ inputs.latest }}
 
       # Publish containers to the DockerHub tagged with the latest version. This
       # only happens if a DOCKERHUB_USERNAME is set.
@@ -102,3 +107,4 @@ jobs:
           image: ${{ inputs.image }}
           variable: ${{ inputs.variable }}
           dockerfile: ${{ inputs.dockerfile }}
+          latest: ${{ inputs.latest }}
