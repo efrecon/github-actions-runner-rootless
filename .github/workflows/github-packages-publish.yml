@@ -52,7 +52,7 @@ jobs:
           variable: GIT_VERSION
           dockerfile: ./Dockerfile.git
       - name: Build and Push Runner Images
-        uses: ./.github/actions/runner
+        uses: ./.github/actions/image
         with:
           registry: ghcr.io/${{ github.repository }}
           platforms: linux/amd64
