@@ -211,13 +211,12 @@ jobs:
           registry: ${{ github.repository_owner }}
           version: ${{ steps.semver.outputs.version }}
           platforms: linux/amd64
-          image: ubuntu-git
           variable: GIT_VERSION
           dockerfile: ./Dockerfile.git
           image: ubuntu-git
 
   runner:
-    name: GH Actions Runner
+    name: GitHub Runner
     needs:
       - dind
       - git
