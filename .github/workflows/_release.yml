@@ -4,36 +4,71 @@ on:
     inputs:
       project:
         type: string
+        description: |
+          Name of the GitHub project that this release will follow. This is the
+          name of the project that the Docker image (below) builds upon in one
+          way or another.
         required: true
       image:
         type: string
+        description: |
+          Name of the image to build, without tag, nor registry specification,
+          e.g. `ubuntu-git`.
         required: true
       platforms:
         type: string
         required: false
+        description: |
+          The comma-separated list of platforms to build for. This list should
+          be compatible with the docker/build-push-action@v2 action, and all
+          architectures supported within the Dockerfile, if relevant.
         default: linux/amd64,linux/arm64
       variable:
         type: string
+        description: |
+          Name of the build-arg variable that will carry the version as of
+          `version`. This **must** match the content of the `dockerfile`
         required: true
       dockerfile:
         type: string
         required: true
+        description: |
+          Path to the Dockerfile to use for this build, relative from the root
+          of the project.
       build-args:
         type: string
         required: false
+        description: |
+          Build arguments to pass further to the build, this should be lines of
+          `VAR=value` statements. Build arguments will be blindly passed to the
+          build step.
       latest:
         type: string
         required: false
         default: "false"
+        description: |
+          When set to `true` this will arrange to make the images generated the
+          `latest` one.
     secrets:
       username:
+        description: |
+          Name of user at the DockerHub, leaving it empty will not attempt to
+          build/push images at the DockerHub.
         required: false
       password:
+        description: |
+          Password/token for user at the DockerHub.
         required: false
     outputs:
       version:
+        description: |
+          Version/tag of Docker image that was generated, i.e. either the short git
+          SHA, or the tag formed by the official version of the package bundled to
+          the git sha from this project.
         value: ${{ jobs.build.outputs.version }}
       image:
+        description: |
+          Fully qualified and tagged name of the image that was pushed.
         value: ${{ jobs.build.outputs.image }}
 
 jobs:
