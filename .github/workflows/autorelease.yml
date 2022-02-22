@@ -50,6 +50,7 @@ jobs:
           platforms: linux/amd64
           image: ubuntu-docker
           variable: DOCKER_VERSION
+          dockerfile: ./Dockerfile.docker
 
       # Publish containers to the DockerHub tagged with the latest version. This
       # only happens if a DOCKERHUB_USERNAME is set.
@@ -74,6 +75,7 @@ jobs:
           platforms: linux/amd64
           image: ubuntu-docker
           variable: DOCKER_VERSION
+          dockerfile: ./Dockerfile.docker
 
   dind:
     name: Docker in Docker
@@ -114,6 +116,7 @@ jobs:
           platforms: linux/amd64
           image: ubuntu-dind
           variable: DOCKER_VERSION
+          dockerfile: ./Dockerfile.dind
 
       # Publish containers to the DockerHub tagged with the latest version. This
       # only happens if a DOCKERHUB_USERNAME is set.
@@ -138,6 +141,7 @@ jobs:
           platforms: linux/amd64
           image: ubuntu-dind
           variable: DOCKER_VERSION
+          dockerfile: ./Dockerfile.dind
 
   git:
     name: git
@@ -171,14 +175,10 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Check Images Presence
-        shell: bash
         id: ghcr
-        run: |
-          if docker image pull -q ghcr.io/${{ github.repository }}/ubuntu-git:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}; then
-            echo "::set-output name=present::true"
-          else
-            echo "::set-output name=present::false"
-          fi
+        uses: ./.github/actions/presence
+        with:
+          image: ghcr.io/${{ github.repository }}/ubuntu-git:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}
       - name: Publish Images to GHCR
         if: steps.ghcr.outputs.present == 'false'
         uses: ./.github/actions/image
@@ -199,14 +199,10 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Check Images Presence
         if: env.HAVE_ACCESS == 'true'
-        shell: bash
         id: dockerhub
-        run: |
-          if docker image pull -q ${{ github.repository_owner }}/ubuntu-git:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}; then
-            echo "::set-output name=present::true"
-          else
-            echo "::set-output name=present::false"
-          fi
+        uses: ./.github/actions/presence
+        with:
+          image: ${{ github.repository_owner }}/ubuntu-git:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}
       - name: Publish Images to DockerHub
         if: env.HAVE_ACCESS == 'true' && steps.dockerhub.outputs.present == 'false'
         uses: ./.github/actions/image
