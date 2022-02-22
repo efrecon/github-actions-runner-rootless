@@ -27,7 +27,8 @@ on:
       password:
         required: false
     outputs:
-      version: ${{ jobs.build.outputs.version }}
+      version:
+        value: ${{ jobs.build.outputs.version }}
 
 jobs:
   build:
