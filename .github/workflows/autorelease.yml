@@ -84,6 +84,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HAVE_ACCESS: ${{ secrets.DOCKERHUB_USERNAME != '' }}
+    outputs:
+      version: ${{ needs.docker.outputs.version }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
@@ -290,7 +292,7 @@ jobs:
           dockerfile: ./Dockerfile
           variable: GH_RUNNER_VERSION
           build-args: |
-            DOCKER_VERSION=${{ needs.docker.outputs.version }}-${{ steps.sha.outputs.sha }}
+            DOCKER_VERSION=${{ needs.dind.outputs.version }}-${{ steps.sha.outputs.sha }}
             GIT_VERSION=${{ needs.git.outputs.version }}-${{ steps.sha.outputs.sha }}
 
       # Publish containers to the DockerHub tagged with the latest version of
@@ -320,7 +322,7 @@ jobs:
           dockerfile: ./Dockerfile
           variable: GH_RUNNER_VERSION
           build-args: |
-            DOCKER_VERSION=${{ needs.docker.outputs.version }}-${{ steps.sha.outputs.sha }}
+            DOCKER_VERSION=${{ needs.dind.outputs.version }}-${{ steps.sha.outputs.sha }}
             GIT_VERSION=${{ needs.git.outputs.version }}-${{ steps.sha.outputs.sha }}
 
       # Create a release at GitHub, this arranges for the comparison step to
