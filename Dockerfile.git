@@ -1,0 +1,24 @@
+FROM ubuntu:20.04
+
+# Ubuntu focal (20.04) has git v2.25, but GitHub Actions require higher. We
+# build git from source instead. When latest, will pick latest stable release at
+# the time of the build.
+ARG GIT_VERSION="latest"
+
+# Copy our version guess helper
+COPY utils/version.sh utils/install-git.sh /usr/local/bin/
+
+# Install and compile git.
+RUN apt-get update \
+		&& DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends \
+					build-essential \
+					curl \
+					gettext \
+					libcurl4-openssl-dev \
+					software-properties-common \
+					wget \
+					zlib1g-dev \
+		&& install-git.sh -v "${GIT_VERSION}" \
+		&& rm -rf /var/lib/apt/lists/*
+
+ENTRYPOINT [ "git" ]
