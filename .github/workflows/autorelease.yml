@@ -57,7 +57,7 @@ jobs:
       build-args: |
         DOCKER_VERSION=${{ needs.dind.outputs.version }}
         GIT_VERSION=${{ needs.git.outputs.version }}
-      latest: ${{ github.ref == 'refs/head/main' }}
+      latest: ${{ github.ref == 'refs/heads/main' }}
     secrets:
       username: ${{ secrets.DOCKERHUB_USERNAME }}
       password: ${{ secrets.DOCKERHUB_TOKEN }}

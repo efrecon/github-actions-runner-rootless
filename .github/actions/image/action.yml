@@ -64,7 +64,7 @@ outputs:
   image:
     description: |
       Fully qualified and tagged name of the image that was pushed.
-    value: ${{ inputs.registry }}/${{ inputs.image }}:${{ env.PKG_VERSION_GITREF }}
+    value: ${{ steps.name.outputs.name }}
 
 runs:
   using: composite
@@ -139,6 +139,12 @@ runs:
       with:
         src: ${{ inputs.registry }}/${{ inputs.image }}:${{ env.PKG_VERSION_GITREF }}
         dst: ${{ inputs.registry }}/${{ inputs.image }}:${{ env.PKG_VERSION }}
+
+    - name: Collect Generated Image Name
+      id: name
+      shell: bash
+      run: |
+        printf '::set-output name=name::%s\n' "${{ inputs.registry }}/${{ inputs.image }}:${{ env.PKG_VERSION_GITREF }}"
 
     # Make the images latest if necessary.
     - name: Make images latest
