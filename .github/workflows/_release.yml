@@ -20,7 +20,9 @@ on:
         required: true
     secrets:
       username:
+        required: false
       password:
+        required: false
 
 jobs:
   build:
