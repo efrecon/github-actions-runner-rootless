@@ -130,8 +130,8 @@ runs:
           REGISTRY=${{ inputs.registry }}
           ${{ inputs.variable }}=${{ env.PKG_VERSION }}
           ${{ inputs.build-args }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-from: type=gha,scope=${{ github.repository}}-${{ github.workflow }}-${{ github.job }}
+        cache-to: type=gha,mode=max,scope=${{ github.repository}}-${{ github.workflow }}-${{ github.job }}
 
     - name: Make image primary release
       if: env.PKG_VERSION_GITREF != env.PKG_VERSION
