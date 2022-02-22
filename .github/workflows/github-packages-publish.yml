@@ -25,21 +25,40 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and Push Docker Images
-        uses: ./.github/actions/docker
+        uses: ./.github/actions/image
         id: docker
         with:
           registry: ghcr.io/${{ github.repository }}
           platforms: linux/amd64
+          image: ubuntu-docker
+          variable: DOCKER_VERSION
+          dockerfile: ./Dockerfile.docker
+      - name: Build and Push DinD Images
+        uses: ./.github/actions/image
+        id: dind
+        with:
+          registry: ghcr.io/${{ github.repository }}
+          platforms: linux/amd64
+          image: ubuntu-dind
+          variable: DOCKER_VERSION
+          dockerfile: ./Dockerfile.dind
       - name: Build and Push git Images
-        uses: ./.github/actions/git
+        uses: ./.github/actions/image
         id: git
         with:
           registry: ghcr.io/${{ github.repository }}
           platforms: linux/amd64
+          image: ubuntu-git
+          variable: GIT_VERSION
+          dockerfile: ./Dockerfile.git
       - name: Build and Push Runner Images
         uses: ./.github/actions/runner
         with:
           registry: ghcr.io/${{ github.repository }}
-          docker: ${{ steps.docker.outputs.version }}
-          git: ${{ steps.git.outputs.version }}
           platforms: linux/amd64
+          image: ubuntu-git
+          variable: GH_RUNNER_VERSION
+          dockerfile: ./Dockerfile
+          build-args: |
+            DOCKER_VERSION=${{ steps.docker.outputs.version }}
+            GIT_VERSION=${{ steps.git.outputs.version }}
