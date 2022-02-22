@@ -11,7 +11,6 @@ jobs:
     with:
       project: moby/moby
       image: ubuntu-docker
-      platforms: linux/amd64
       variable: DOCKER_VERSION
       dockerfile: ./Dockerfile.docker
     secrets:
@@ -26,7 +25,6 @@ jobs:
     with:
       project: moby/moby
       image: ubuntu-dind
-      platforms: linux/amd64
       variable: DOCKER_VERSION
       dockerfile: ./Dockerfile.dind
     secrets:
@@ -39,7 +37,6 @@ jobs:
     with:
       project: git/git
       image: ubuntu-git
-      platforms: linux/amd64
       variable: GIT_VERSION
       dockerfile: ./Dockerfile.git
     secrets:
@@ -55,7 +52,6 @@ jobs:
     with:
       project: actions/runner
       image: github-actions-runner
-      platforms: linux/amd64
       variable: GH_RUNNER_VERSION
       dockerfile: ./Dockerfile
       build-args: |
