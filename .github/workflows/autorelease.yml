@@ -274,24 +274,24 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Check Images Presence
-        shell: bash
         id: ghcr
-        run: |
-          if docker image pull -q ghcr.io/${{ github.repository }}/github-actions-runner:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}; then
-            echo "::set-output name=present::true"
-          else
-            echo "::set-output name=present::false"
-          fi
+        uses: ./.github/actions/presence
+        with:
+          image: ghcr.io/${{ github.repository }}/github-actions-runner:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}
       - name: Publish Image to GHCR
         if: steps.ghcr.outputs.present == 'false'
-        uses: ./.github/actions/runner
+        uses: ./.github/actions/image
         with:
           registry: ghcr.io/${{ github.repository }}
-          docker: ${{ needs.docker.outputs.version }}
-          git: ${{ needs.git.outputs.version }}
-          runner: ${{ steps.semver.outputs.version }}
+          version: ${{ steps.semver.outputs.version }}
           latest: ${{ steps.main.outputs.latest }}
           platforms: linux/amd64
+          image: github-actions-runner
+          dockerfile: ./Dockerfile
+          variable: GH_RUNNER_VERSION
+          build-args: |
+            DOCKER_VERSION=${{ needs.docker.outputs.version }}-${{ steps.sha.outputs.sha }}
+            GIT_VERSION=${{ needs.git.outputs.version }}-${{ steps.sha.outputs.sha }}
 
       # Publish containers to the DockerHub tagged with the latest version of
       # the Docker engine and of the action runner. This only happens if a
@@ -304,24 +304,24 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Check Images Presence
         if: env.HAVE_ACCESS == 'true'
-        shell: bash
         id: dockerhub
-        run: |
-          if docker image pull -q ${{ github.repository_owner }}/github-actions-runner:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}; then
-            echo "::set-output name=present::true"
-          else
-            echo "::set-output name=present::false"
-          fi
+        uses: ./.github/actions/presence
+        with:
+          image: ${{ github.repository_owner }}/github-actions-runner:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}
       - name: Publish Images to DockerHub
         if: env.HAVE_ACCESS == 'true' && steps.dockerhub.outputs.present == 'false'
-        uses: ./.github/actions/runner
+        uses: ./.github/actions/image
         with:
           registry: ${{ github.repository_owner }}
-          docker: ${{ needs.docker.outputs.version }}
-          git: ${{ needs.git.outputs.version }}
-          runner: ${{ steps.semver.outputs.version }}
+          version: ${{ steps.semver.outputs.version }}
           latest: ${{ steps.main.outputs.latest }}
           platforms: linux/amd64
+          image: github-actions-runner
+          dockerfile: ./Dockerfile
+          variable: GH_RUNNER_VERSION
+          build-args: |
+            DOCKER_VERSION=${{ needs.docker.outputs.version }}-${{ steps.sha.outputs.sha }}
+            GIT_VERSION=${{ needs.git.outputs.version }}-${{ steps.sha.outputs.sha }}
 
       # Create a release at GitHub, this arranges for the comparison step to
       # work next time. Release is created last, so it acts as a marker that
