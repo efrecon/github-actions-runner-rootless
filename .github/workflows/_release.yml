@@ -18,11 +18,16 @@ on:
       dockerfile:
         type: string
         required: true
+      build-args:
+        type: string
+        required: false
     secrets:
       username:
         required: false
       password:
         required: false
+    outputs:
+      version: ${{ jobs.build.outputs.version }}
 
 jobs:
   build:

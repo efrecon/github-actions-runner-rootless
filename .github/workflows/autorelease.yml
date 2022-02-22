@@ -5,7 +5,7 @@ on:
     - cron: "0 0 * * *"
 
 jobs:
-  moby:
+  docker:
     name: Docker (moby)
     uses: ./.github/workflows/_release.yml
     with:
@@ -17,78 +17,6 @@ jobs:
     secrets:
       username: ${{ secrets.DOCKERHUB_USERNAME }}
       password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-  docker:
-    name: Docker (moby)
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.semver.outputs.version }}
-    env:
-      HAVE_ACCESS: ${{ secrets.DOCKERHUB_USERNAME != '' }}
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v2
-
-      # Compute git short SHA, as ${{ github.sha }} is the long one.
-      - name: Git short SHA
-        id: sha
-        shell: bash
-        run: printf '::set-output name=sha::%s\n' "$(git rev-parse --short HEAD)"
-
-      - name: Release Version
-        id: semver
-        uses: ./.github/actions/version
-        with:
-          project: moby/moby
-
-      # Publish containers to the GHCR tagged with the latest version, if they
-      # do not already exist.
-      - name: Login to GHCR
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Check Images Presence
-        id: ghcr
-        uses: ./.github/actions/presence
-        with:
-          image: ghcr.io/${{ github.repository }}/ubuntu-docker:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}
-      - name: Publish Images to GHCR
-        if: steps.ghcr.outputs.present == 'false'
-        uses: ./.github/actions/image
-        with:
-          registry: ghcr.io/${{ github.repository }}
-          version: ${{ steps.semver.outputs.version }}
-          platforms: linux/amd64
-          image: ubuntu-docker
-          variable: DOCKER_VERSION
-          dockerfile: ./Dockerfile.docker
-
-      # Publish containers to the DockerHub tagged with the latest version. This
-      # only happens if a DOCKERHUB_USERNAME is set.
-      - name: Login to DockerHub
-        if: env.HAVE_ACCESS == 'true'
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Check Images Presence
-        if: env.HAVE_ACCESS == 'true'
-        id: dockerhub
-        uses: ./.github/actions/presence
-        with:
-          image: ${{ github.repository_owner }}/ubuntu-docker:${{ steps.semver.outputs.version }}-${{ steps.sha.outputs.sha }}
-      - name: Publish Images to DockerHub
-        if: env.HAVE_ACCESS == 'true' && steps.dockerhub.outputs.present == 'false'
-        uses: ./.github/actions/image
-        with:
-          registry: ${{ github.repository_owner }}
-          version: ${{ steps.semver.outputs.version }}
-          platforms: linux/amd64
-          image: ubuntu-docker
-          variable: DOCKER_VERSION
-          dockerfile: ./Dockerfile.docker
 
   dind:
     name: Docker in Docker
