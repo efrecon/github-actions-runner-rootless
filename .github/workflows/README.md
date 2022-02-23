@@ -50,3 +50,14 @@ following operations:
 
 Once you have cleaned up, it is possible to manually re-run the workflow from
 the GitHub UI.
+
+## Manual Release
+
+It is possible to manually release, back in time, if necessary. This is handled
+by the `manual.yml` workflow. You can interact with it from the GitHub actions
+UI. The workflow takes the SemVer for the `runner`, `docker` and `git` as
+inputs. These versions will default to the latest stable release of each
+project. When releasing back in time, "latest" will not always have the expected
+outcome. Instead, you should arrange to research which version of each project
+(`git` and `docker`) was the latest when the runner release that you want to
+catch up with was made.

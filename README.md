@@ -34,6 +34,8 @@ This will run the [new self-hosted github actions runners](https://help.github.c
 * Automatically [follows](#releases) the [release] tempo of the official
   [runner]. Generated images will be tagged with the SemVer of the release.
 * `latest` tag will correspond to latest [release] of the [runner].
+* Fully automated [workflows](.github/workflows/README.md), manual interaction
+  possible.
 * Comes bundled with latest `docker compose` (v2, the plugin), together with the
   `docker-compose` [shim].
 
