@@ -9,6 +9,7 @@ Built on `ubuntu:20.04`, configured for rootless dind 🎉, impossible without i
 # Images
 - [msyea/ubuntu-docker](https://hub.docker.com/repository/docker/msyea/ubuntu-docker)
 - [msyea/ubuntu-dind](https://hub.docker.com/repository/docker/msyea/ubuntu-dind)
+- [msyea/ubuntu-git](https://hub.docker.com/repository/docker/msyea/ubuntu-git)
 - [msyea/github-actions-runner](https://hub.docker.com/repository/docker/msyea/github-actions-runner)
 
 Docker Github Actions Runner
@@ -17,6 +18,31 @@ Docker Github Actions Runner
 [![Docker Pulls](https://img.shields.io/docker/pulls/msyea/github-actions-runner.svg)](https://hub.docker.com/r/msyea/github-actions-runner)
 
 This will run the [new self-hosted github actions runners](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/hosting-your-own-runners).
+
+## Features ##
+
+* DinD Docker daemon running in rootless mode.
+* Dynamic registration of the runner at GitHub.
+* Runner registration for an entire organisation, or for a repository.
+* Support for both enterprise installations, and `github.com`.
+* Support for labels and groups to categorise runners.
+* Able to run all [types] of actions, including [Docker][container-action]
+  container actions!
+* Multi-platform support.
+* Each runner can be customised through running a series of script/programs
+  prior to registration at the GitHub server.
+* Automatically [follows](#releases) the [release] tempo of the official
+  [runner]. Generated images will be tagged with the SemVer of the release.
+* `latest` tag will correspond to latest [release] of the [runner].
+* Comes bundled with latest `docker compose` (v2, the plugin), together with the
+  `docker-compose` [shim].
+
+  [types]: https://docs.github.com/en/actions/creating-actions/about-custom-actions#types-of-actions
+  [container-action]: https://docs.github.com/en/actions/creating-actions/creating-a-docker-container-action
+  [release]: https://github.com/actions/runner/releases
+  [runner]: https://github.com/actions/runner
+  [shim]: https://github.com/docker/compose-switch
+
 ## Environment Variables ##
 
 | Environment Variable | Description |
@@ -163,6 +189,7 @@ runners. The [Dockerfile](./Dockerfile) for the runner images ensures:
   Unless otherwise specified, the latest stable version at the time of image
   building will be automatically picked up. This is because the default version
   available in Ubuntu is too old.
+* The `build-essential` package, in order to facilitate compilation.
 
 In the rootless runners, the `DOCKER_HOST` variable is set to point out the
 private socket owned by the `rootless` user. In addition, `/var/run/docker.sock`
@@ -172,7 +199,6 @@ these images. The link is necessary as `/var/run/docker.sock` is currently
 [hard-coded].
 
   [compose]: https://github.com/docker/compose
-  [shim]: https://github.com/docker/compose-switch
   [docker-action]: https://docs.github.com/en/actions/creating-actions/creating-a-docker-container-action
   [hard-coded]: https://github.com/actions/runner/blob/47ba1203c98ebe80d7fd27d515485b9624f86e94/src/Runner.Worker/Handlers/ContainerActionHandler.cs#L184
 
@@ -186,5 +212,3 @@ the semantic version as a tag will be made available shortly after a new
 [release] is made. Released runner images use the latest Docker stable release
 version at the time of the build, e.g. the release. See
 [here](.github/workflows/README.md) for more details.
-
-  [release]: https://github.com/actions/runner/releases
