@@ -6,24 +6,21 @@ on:
       runner:
         required: true
         description: |
-          Pure SemVer version of the official GitHub [runner] to generate a
-          rootless Docker image for. **NO LEADING `v`**
-
-            [runner]: https://github.com/actions/runner/releases
+          Pure SemVer version of the official GitHub runner to generate a
+          rootless Docker image for. NO LEADING `v`!
+          see: https://github.com/actions/runner/releases
       git:
         required: false
         description: |
-          Pure SemVer version of [git] to use in rootless Docker image.
-          **NO LEADING `v`**
-
-            [git]: https://github.com/git/git/tags
+          Pure SemVer version of git to use in rootless Docker image. NO LEADING
+          `v`!
+          see: https://github.com/git/git/tags
       docker:
         required: false
         description: |
-          Pure SemVer version of [docker] to use in rootless Docker image.
-          **NO LEADING `v`**
-
-            [docker]: https://github.com/moby/moby/releases
+          Pure SemVer version of docker to use in rootless Docker image. NO
+          LEADING `v`!
+          see: https://github.com/moby/moby/releases
 
 jobs:
   docker:
