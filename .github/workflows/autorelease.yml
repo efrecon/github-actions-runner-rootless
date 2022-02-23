@@ -101,7 +101,9 @@ jobs:
           body: |
             Automatic release to match new GH Actions runner [release]. See all
             versions and pull instructions [here][images]. Main generated GHCR
-            image called `${{ needs.runner.outputs.image }}`.
+            image called `${{ needs.runner.outputs.image }}`. This image also
+            exists with the git sha suffix, i.e. with only the SemVer of the
+            runner release as a tag: `${{ steps.semver.outputs.version }}`.
 
               [release]: https://github.com/actions/runner/releases/tag/v${{ steps.semver.outputs.version }}
               [images]: https://github.com/${{ github.repository }}/pkgs/container/github-actions-runner-rootless%2Fgithub-actions-runner
