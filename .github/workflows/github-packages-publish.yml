@@ -24,7 +24,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and Push Docker Images
+      - name: Build and Push Docker Image
         uses: ./.github/actions/image
         id: docker
         with:
@@ -33,7 +33,7 @@ jobs:
           image: ubuntu-docker
           variable: DOCKER_VERSION
           dockerfile: ./Dockerfile.docker
-      - name: Build and Push DinD Images
+      - name: Build and Push DinD Image
         uses: ./.github/actions/image
         id: dind
         with:
@@ -42,7 +42,7 @@ jobs:
           image: ubuntu-dind
           variable: DOCKER_VERSION
           dockerfile: ./Dockerfile.dind
-      - name: Build and Push git Images
+      - name: Build and Push git Image
         uses: ./.github/actions/image
         id: git
         with:
@@ -51,7 +51,7 @@ jobs:
           image: ubuntu-git
           variable: GIT_VERSION
           dockerfile: ./Dockerfile.git
-      - name: Build and Push Runner Images
+      - name: Build and Push Runner Image
         uses: ./.github/actions/image
         with:
           registry: ghcr.io/${{ github.repository }}

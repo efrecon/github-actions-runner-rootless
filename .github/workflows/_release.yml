@@ -49,6 +49,13 @@ on:
         description: |
           When set to `true` this will arrange to make the images generated the
           `latest` one.
+      version:
+        type: string
+        required: false
+        description: |
+          The version of the `project` that we want to build an image for. Most
+          of the times, this should be empty, in which case the latest official
+          and stable release version of the project will be polled and used.
     secrets:
       username:
         description: |
@@ -62,9 +69,9 @@ on:
     outputs:
       version:
         description: |
-          Version/tag of Docker image that was generated, i.e. either the short git
-          SHA, or the tag formed by the official version of the package bundled to
-          the git sha from this project.
+          Version/tag of Docker image that was generated, i.e. either the short
+          git SHA, or the tag formed by the official version of the package
+          bundled to the git sha from this project.
         value: ${{ jobs.build.outputs.version }}
       image:
         description: |
@@ -98,10 +105,21 @@ jobs:
       # of interest to us, this action returns a pure SemVer, formatted as
       # `major.minor.patch` (no leading `v`).
       - name: Release Version
-        id: semver
+        if: inputs.version == ''
+        id: project
         uses: ./.github/actions/version
         with:
           project: ${{ inputs.project }}
+
+      - name: Project Version
+        id: semver
+        shell: bash
+        run: |
+          if [ -z "${{ inputs.version }}" ]; then
+            printf '::set-output name=version::%s\n' "${{ steps.project.outputs.version }}"
+          else
+            printf '::set-output name=version::%s\n' "${{ inputs.version }}"
+          fi
 
       # Publish containers to the GHCR tagged with the latest version, if they
       # do not already exist.
