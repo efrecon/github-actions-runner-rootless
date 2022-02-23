@@ -78,6 +78,7 @@ RUN install-compose.sh -c "$COMPOSE_VERSION" -s "${COMPOSE_SWITCH_VERSION}"
 # containers).
 RUN apt-get update \
 		&& apt-get -y install \
+					build-essential \
 					curl \
 					gettext \
 					jq \
