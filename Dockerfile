@@ -55,12 +55,12 @@ RUN mkdir /run/user && chmod 1777 /run/user
 
 
 # create a default user preconfigured for running rootless dockerd
-RUN adduser --home /home/${USER_DOCKER} --gecos 'Rootless' --disabled-password ${USER_DOCKER}; \
+RUN adduser --home /home/${USER_DOCKER} --gecos 'Rootless' --disabled-password "${USER_DOCKER}"; \
 		echo "${USER_DOCKER}:${USER_REMAP}:65536" >> /etc/subuid; \
 		echo "${USER_DOCKER}:${USER_REMAP}:65536" >> /etc/subgid
 
 # look into guid !!!
-RUN [ "${USER_RUNNER}" != "${USER_DOCKER}" ] && adduser --disabled-password ${USER_RUNNER}
+RUN if test "${USER_RUNNER}" != "${USER_DOCKER}"; then adduser --disabled-password "${USER_RUNNER}"; fi
 
 # Copy our utils to /usr/local/bin
 COPY utils/version.sh utils/git-symlink.sh utils/install-*.sh /usr/local/bin/
