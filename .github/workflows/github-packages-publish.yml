@@ -63,3 +63,4 @@ jobs:
             DOCKER_VERSION=${{ steps.docker.outputs.version }}
             GIT_VERSION=${{ steps.git.outputs.version }}
             USER_DOCKER=runner
+            USER_REMAP=296608
