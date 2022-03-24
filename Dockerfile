@@ -22,6 +22,11 @@ ARG GH_RUNNER_VERSION="latest"
 ARG COMPOSE_VERSION=latest
 ARG COMPOSE_SWITCH_VERSION=latest
 
+# Name of Users and uid remapping information
+ARG USER_DOCKER=rootless
+ARG USER_RUNNER=runner
+ARG USER_REMAP=65537
+
 ARG DOCKERD_ROOTLESS_INSTALL_FLAGS
 
 # Build arguments for OCI-oriented information
@@ -48,13 +53,14 @@ LABEL org.opencontainers.image.created="${OCI_RFC3339}"
 # "/run/user/UID" will be used by default as the value of XDG_RUNTIME_DIR
 RUN mkdir /run/user && chmod 1777 /run/user
 
-# look into guid !!!
-RUN adduser --disabled-password runner
 
 # create a default user preconfigured for running rootless dockerd
-RUN adduser --home /home/rootless --gecos 'Rootless' --disabled-password rootless; \
-		echo 'rootless:100000:65536' >> /etc/subuid; \
-		echo 'rootless:100000:65536' >> /etc/subgid
+RUN adduser --home /home/${USER_DOCKER} --gecos 'Rootless' --disabled-password ${USER_DOCKER}; \
+		echo "${USER_DOCKER}:${USER_REMAP}:65536" >> /etc/subuid; \
+		echo "${USER_DOCKER}:${USER_REMAP}:65536" >> /etc/subgid
+
+# look into guid !!!
+RUN [ "${USER_RUNNER}" != "${USER_DOCKER}" ] && adduser --disabled-password ${USER_RUNNER}
 
 # Copy our utils to /usr/local/bin
 COPY utils/version.sh utils/git-symlink.sh utils/install-*.sh /usr/local/bin/
@@ -64,10 +70,10 @@ RUN install-rootless.sh -v "${DOCKER_VERSION}" -c "${DOCKER_CHANNEL}"
 # pre-create "/var/lib/docker" for our rootless user and arrange for .local
 # directory to be owned by rootless so default XDG locations associated to this
 # directory (XDG_STATE_HOME and XDG_DATA_HOME) can be used.
-RUN mkdir -p /home/rootless/.local/share/docker; \
-		mkdir -p /home/rootless/.local/state; \
-		chown -R rootless:rootless /home/rootless/.local
-VOLUME /home/rootless/.local/share/docker
+RUN mkdir -p /home/${USER_DOCKER}/.local/share/docker; \
+		mkdir -p /home/${USER_DOCKER}/.local/state; \
+		chown -R ${USER_DOCKER}:${USER_DOCKER} /home/${USER_DOCKER}/.local
+VOLUME /home/${USER_DOCKER}/.local/share/docker
 
 # Install Docker compose. Turn on compatibility mode when installing newer 2.x
 # branch.
@@ -139,8 +145,8 @@ COPY --from=git /usr/share/git-core /usr/share/git-core
 RUN git-symlink.sh
 
 WORKDIR /actions-runner
-RUN chown rootless:rootless /actions-runner
-USER rootless
+RUN chown ${USER_DOCKER}:${USER_DOCKER} /actions-runner
+USER ${USER_DOCKER}
 RUN install-runner.sh -v "$GH_RUNNER_VERSION"
 USER root
 RUN ./bin/installdependencies.sh
@@ -150,13 +156,13 @@ COPY github-actions-entrypoint.sh runner.sh token.sh dockerd-rootless.sh dockerd
 # Create a link to where we will be storing the rootless UNIX socket for the
 # Docker daemon. This is to allow Dockerfile-based GH actions to run, as the
 # /var/run/docker.sock path is hard-coded in the implementation code.
-RUN ln -sf /home/rootless/.docker/run/docker.sock /var/run/docker.sock
+RUN ln -sf /home/${USER_DOCKER}/.docker/run/docker.sock /var/run/docker.sock
 
-USER rootless
+USER ${USER_DOCKER}
 RUN dockerd-rootless-setup-tool.sh install ${DOCKERD_ROOTLESS_INSTALL_FLAGS}
-ENV XDG_RUNTIME_DIR=/home/rootless/.docker/run \
+ENV XDG_RUNTIME_DIR=/home/${USER_DOCKER}/.docker/run \
 		PATH=/usr/local/bin:$PATH \
-		DOCKER_HOST=unix:///home/rootless/.docker/run/docker.sock
+		DOCKER_HOST=unix:///home/${USER_DOCKER}/.docker/run/docker.sock
 
-ENTRYPOINT [ "tini", "-s", "--" ]
+ENTRYPOINT [ "tini", "-g", "--" ]
 CMD [ "github-actions-entrypoint.sh" ]
