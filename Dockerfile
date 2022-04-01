@@ -162,7 +162,8 @@ USER ${USER_DOCKER}
 RUN dockerd-rootless-setup-tool.sh install ${DOCKERD_ROOTLESS_INSTALL_FLAGS}
 ENV XDG_RUNTIME_DIR=/home/${USER_DOCKER}/.docker/run \
 		PATH=/usr/local/bin:$PATH \
-		DOCKER_HOST=unix:///home/${USER_DOCKER}/.docker/run/docker.sock
+		DOCKER_HOST=unix:///home/${USER_DOCKER}/.docker/run/docker.sock \
+		USER=${USER_DOCKER}
 
 ENTRYPOINT [ "tini", "-g", "--" ]
 CMD [ "github-actions-entrypoint.sh" ]
