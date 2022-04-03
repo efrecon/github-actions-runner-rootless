@@ -158,6 +158,8 @@ COPY github-actions-entrypoint.sh runner.sh token.sh dockerd-rootless.sh dockerd
 # /var/run/docker.sock path is hard-coded in the implementation code.
 RUN ln -sf /home/${USER_DOCKER}/.docker/run/docker.sock /var/run/docker.sock
 
+# Change back to the rootless user and make sure the USER environment variable
+# is present and points at the proper user.
 USER ${USER_DOCKER}
 RUN dockerd-rootless-setup-tool.sh install ${DOCKERD_ROOTLESS_INSTALL_FLAGS}
 ENV XDG_RUNTIME_DIR=/home/${USER_DOCKER}/.docker/run \
@@ -165,5 +167,5 @@ ENV XDG_RUNTIME_DIR=/home/${USER_DOCKER}/.docker/run \
 		DOCKER_HOST=unix:///home/${USER_DOCKER}/.docker/run/docker.sock \
 		USER=${USER_DOCKER}
 
-ENTRYPOINT [ "tini", "-g", "--" ]
+ENTRYPOINT [ "tini", "-g", "-s", "--" ]
 CMD [ "github-actions-entrypoint.sh" ]
