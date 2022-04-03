@@ -1,24 +1,9 @@
-#!/bin/bash
-# Logger from this post http://www.cubicrace.com/2016/03/log-tracing-mechnism-for-shell-scripts.html
+#!/bin/sh
 
-function INFO(){
-    local function_name="${FUNCNAME[1]}"
-    local msg="$1"
-    timeAndDate=`date`
-    echo "[$timeAndDate] [INFO] [${0}] $msg"
+__LOG() {
+    printf '[%s] [%s] [%s] %s\n' "$(date +'%Y%m%d-%H%M%S')" "${1:-LOG}" "$(basename "$0")" "${2:-}" >&2
 }
 
-
-function DEBUG(){
-    local function_name="${FUNCNAME[1]}"
-    local msg="$1"
-    timeAndDate=`date`
-    echo "[$timeAndDate] [DEBUG] [${0}] $msg"
-}
-
-function ERROR(){
-    local function_name="${FUNCNAME[1]}"
-    local msg="$1"
-    timeAndDate=`date`
-    echo "[$timeAndDate] [ERROR]  $msg"
-}
+INFO() { __LOG INFO "$1"; }
+DEBUG() { __LOG DEBUG "$1"; }
+ERROR() { __LOG ERROR "$1"; }

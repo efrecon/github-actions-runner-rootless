@@ -21,7 +21,7 @@ if [ -z "$VERSION_DOWNLOAD" ]; then
   if command -v wget >/dev/null 2>&1; then
     VERSION_DOWNLOAD="wget -q -O -"
   elif command -v curl >/dev/null 2>&1; then
-    VERSION_DOWNLOAD="curl -sSL -"
+    VERSION_DOWNLOAD="curl -sSL"
   else
     echo "Cannot find an external tool for URL downloads!" >&2
     exit 1

@@ -26,9 +26,7 @@ LABEL org.opencontainers.image.description="Docker in Docker"
 LABEL org.opencontainers.image.created="${OCI_RFC3339}"
 
 # https://github.com/docker/docker/blob/master/project/PACKAGERS.md#runtime-dependencies
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && \
-    apt-get -y install \
+RUN /usr/local/share/docker/apt-install.sh \
 			btrfs-progs \
 			e2fsprogs \
 			kmod \
@@ -38,7 +36,8 @@ RUN apt-get update && \
 			uidmap \
 			pigz \
 			xfsprogs \
-			xz-utils
+			xz-utils \
+		&& /usr/local/share/docker/apt-clean.sh
 
 # set up subuid/subgid so that "--userns-remap=default" works out-of-the-box
 RUN addgroup --system dockremap; \

@@ -54,7 +54,7 @@ if [ -z "$GIT_DOWNLOAD" ]; then
   if command -v wget >/dev/null 2>&1; then
     GIT_DOWNLOAD="wget -q -O -"
   elif command -v curl >/dev/null 2>&1; then
-    GIT_DOWNLOAD="curl -sSL -"
+    GIT_DOWNLOAD="curl -sSL"
   else
     echo "Cannot find an external tool for URL downloads!" >&2
     exit 1
