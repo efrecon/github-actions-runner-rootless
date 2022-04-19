@@ -7,6 +7,11 @@ jobs:
   push:
     name: Build Intel Images
     runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
@@ -14,41 +19,37 @@ jobs:
         uses: ./.github/actions/image
         id: docker
         with:
-          registry: ghcr.io/${{ github.repository }}
+          registry: localhost:5000/${{ github.repository }}
           platforms: linux/amd64
           image: ubuntu-docker
           variable: DOCKER_VERSION
           dockerfile: ./Dockerfile.docker
-          push: "false"
       - name: Build DinD Image
         uses: ./.github/actions/image
         id: dind
         with:
-          registry: ghcr.io/${{ github.repository }}
+          registry: localhost:5000/${{ github.repository }}
           platforms: linux/amd64
           image: ubuntu-dind
           variable: DOCKER_VERSION
           dockerfile: ./Dockerfile.dind
-          push: "false"
       - name: Build git Image
         uses: ./.github/actions/image
         id: git
         with:
-          registry: ghcr.io/${{ github.repository }}
+          registry: localhost:5000/${{ github.repository }}
           platforms: linux/amd64
           image: ubuntu-git
           variable: GIT_VERSION
           dockerfile: ./Dockerfile.git
-          push: "false"
       - name: Build Runner Image
         uses: ./.github/actions/image
         with:
-          registry: ghcr.io/${{ github.repository }}
+          registry: localhost:5000/${{ github.repository }}
           platforms: linux/amd64
           image: github-actions-runner
           variable: GH_RUNNER_VERSION
           dockerfile: ./Dockerfile
-          push: "false"
           build-args: |
             DOCKER_VERSION=${{ steps.docker.outputs.version }}
             GIT_VERSION=${{ steps.git.outputs.version }}
