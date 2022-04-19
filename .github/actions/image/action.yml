@@ -110,12 +110,6 @@ runs:
         printf '::set-output name=now::%s\n' "$(date --iso-8601=seconds)"
         printf '::set-output name=branch::%s\n' "$(printf %s\\n "${{github.ref}}"|sed -E 's~refs/heads/~~')"
 
-    # Setup multi-platform support for Docker build
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v1
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
-
     # Build and Push the image to the remote registry, in turns.
     - name: Build/Push image to Registry
       uses: docker/build-push-action@v2
