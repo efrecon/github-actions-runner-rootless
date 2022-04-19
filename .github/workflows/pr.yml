@@ -2,7 +2,7 @@
 # everything from scratch, just for Intel for a quicker process, and pull/push
 # to a local registry as we: 1. do not want to pollute the GHCR or DockerHub, 2.
 # Want to test the entire process.
-name: PR
+name: dev/PR
 on:
   pull_request:
   workflow_dispatch:

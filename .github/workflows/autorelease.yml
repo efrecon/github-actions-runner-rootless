@@ -2,7 +2,7 @@
 # there is, figure out the official version numbers for Docker and git at the
 # time of the release. Build new images of everything (if necessary), for all
 # platforms, tagged with these versions.
-name: Follow Upstream Releases
+name: Release/Auto Upstream
 on:
   workflow_dispatch:
   schedule:

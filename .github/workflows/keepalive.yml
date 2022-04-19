@@ -1,7 +1,7 @@
 # Keep-Alive all GitHub Workflows so they don't stop working after 60 days of
 # inactivity. This is because the autorelease.yml workflow depends on activity
 # at the source GH actions runner project.
-name: keepalive
+name: ops/keepalive
 
 on:
   schedule:

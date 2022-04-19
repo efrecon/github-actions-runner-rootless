@@ -1,4 +1,4 @@
-name: Generic Release
+name: Release/Generic (Reusable)
 on:
   workflow_call:
     inputs:
