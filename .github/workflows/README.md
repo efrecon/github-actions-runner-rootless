@@ -67,7 +67,7 @@ catch up with was made.
 When pull requests are made, the [`pr.yml`](./pr.yml) workflow arranges to test
 the entire build process: images for all dependencies will be built, together
 with the runner image. This is a lengthy process, so the build only targets the
-Intel platform. Images are tagged with the current git SHA, and pushed to a
-local registry that is setup just for the sake of the test. This has the
+`linux/amd64` platform. Images are tagged with the current git SHA, and pushed
+to a local registry that is setup just for the sake of the test. This has the
 advantage of testing the entire chain, but is also a workaround to avoid Docker
 image cache misses.
