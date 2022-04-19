@@ -1,24 +1,23 @@
-# Whenever we push a (relevant) change to the code, try to generate test images
-# at the GHCR, and just for Intel. Images will be tagged with the GIT short SHA
-# and can be used for testing purposes, e.g. when setting up a test runner in
-# k8s.
-name: Publish to GHCR
+# On PR, we want to make sure things will work when the PR is merged. Build
+# everything from scratch, just for Intel for a quicker process, and pull/push
+# to a local registry as we: 1. do not want to pollute the GHCR or DockerHub, 2.
+# Want to test the entire process.
+name: PR
 on:
-  push:
-    branches:
-      - '*'
-    paths:
-      - '**.sh'
-      - 'Dockerfile*'
-      - 'dind'
-      - '.github/actions/**'
-      - '.github/workflows/github-packages-publish.yml'
+  pull_request:
   workflow_dispatch:
 
 jobs:
   push:
-    name: Push images to GHCR
+    name: Build Intel Images
     runs-on: ubuntu-latest
+    # Create a local registry so we can run a complete test, including
+    # pushing/pulling from registry if necessary.
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
@@ -27,43 +26,40 @@ jobs:
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and Push Docker Image
+          driver-opts: network=host
+      # Build all images, one at a time
+      - name: Build Docker Image
         uses: ./.github/actions/image
         id: docker
         with:
-          registry: ghcr.io/${{ github.repository }}
+          registry: localhost:5000/${{ github.repository }}
           platforms: linux/amd64
           image: ubuntu-docker
           variable: DOCKER_VERSION
           dockerfile: ./Dockerfile.docker
-      - name: Build and Push DinD Image
+      - name: Build DinD Image
         uses: ./.github/actions/image
         id: dind
         with:
-          registry: ghcr.io/${{ github.repository }}
+          registry: localhost:5000/${{ github.repository }}
           platforms: linux/amd64
           image: ubuntu-dind
           variable: DOCKER_VERSION
           dockerfile: ./Dockerfile.dind
-      - name: Build and Push git Image
+      - name: Build git Image
         uses: ./.github/actions/image
         id: git
         with:
-          registry: ghcr.io/${{ github.repository }}
+          registry: localhost:5000/${{ github.repository }}
           platforms: linux/amd64
           image: ubuntu-git
           variable: GIT_VERSION
           dockerfile: ./Dockerfile.git
-      - name: Build and Push Runner Image
+      - name: Build Runner Image
         uses: ./.github/actions/image
         with:
-          registry: ghcr.io/${{ github.repository }}
+          registry: localhost:5000/${{ github.repository }}
           platforms: linux/amd64
           image: github-actions-runner
           variable: GH_RUNNER_VERSION

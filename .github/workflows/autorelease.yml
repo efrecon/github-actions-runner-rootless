@@ -1,3 +1,7 @@
+# Once every day, check if there is a new release of the runner available. When
+# there is, figure out the official version numbers for Docker and git at the
+# time of the release. Build new images of everything (if necessary), for all
+# platforms, tagged with these versions.
 name: Follow Upstream Releases
 on:
   workflow_dispatch:

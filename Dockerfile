@@ -63,7 +63,7 @@ RUN adduser --home /home/${USER_DOCKER} --gecos 'Rootless' --disabled-password "
 RUN if test "${USER_RUNNER}" != "${USER_DOCKER}"; then adduser --disabled-password "${USER_RUNNER}"; fi
 
 # Copy our utils to /usr/local/bin
-COPY utils/version.sh utils/git-symlink.sh utils/install-*.sh /usr/local/bin/
+COPY utils/version.sh utils/arch.sh utils/git-symlink.sh utils/install-*.sh /usr/local/bin/
 
 RUN install-rootless.sh -v "${DOCKER_VERSION}" -c "${DOCKER_CHANNEL}"
 
@@ -82,8 +82,7 @@ RUN install-compose.sh -c "$COMPOSE_VERSION" -s "${COMPOSE_SWITCH_VERSION}"
 # Install git dependencies and git from image. This will also install a few
 # other packages, incl. curl and tini (for process-tree control within
 # containers).
-RUN apt-get update \
-		&& apt-get -y install \
+RUN /usr/local/share/docker/apt-install.sh \
 					build-essential \
 					curl \
 					gettext \
@@ -96,7 +95,7 @@ RUN apt-get update \
 					tini \
 					zlib1g \
 					zstd \
-		&& rm -rf /var/lib/apt/lists/*
+		&& /usr/local/share/docker/apt-clean.sh
 
 # Now... starts the fun! COPY resolves symlinks, which we want to avoid at all
 # price since that would generate a LARGE image otherwise. So, instead, we'll be

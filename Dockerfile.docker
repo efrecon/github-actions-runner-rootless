@@ -25,8 +25,9 @@ LABEL org.opencontainers.image.title="Docker Client (and Server)"
 LABEL org.opencontainers.image.description="Dockerised Docker Client"
 LABEL org.opencontainers.image.created="${OCI_RFC3339}"
 
-RUN apt update \
-    && apt install -y ca-certificates openssh-client wget
+COPY utils/apt-*.sh /usr/local/share/docker/
+RUN /usr/local/share/docker/apt-install.sh ca-certificates openssh-client wget \
+    && /usr/local/share/docker/apt-clean.sh
 
 # set up nsswitch.conf for Go's "netgo" implementation (which Docker explicitly uses)
 # - https://github.com/docker/docker-ce/blob/v17.09.0-ce/components/engine/hack/make.sh#L149
@@ -35,7 +36,7 @@ RUN apt update \
 RUN echo 'hosts: files dns' >> /etc/nsswitch.conf
 
 # Copy our version guess helper
-COPY utils/version.sh utils/install-docker.sh /usr/local/bin/
+COPY utils/version.sh utils/arch.sh utils/install-docker.sh /usr/local/bin/
 
 # TODO ENV DOCKER_SHA256
 # https://github.com/docker/docker-ce/blob/5b073ee2cf564edee5adca05eee574142f7627bb/components/packaging/static/hash_files !!

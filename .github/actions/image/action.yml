@@ -53,6 +53,10 @@ inputs:
     description: |
       Name of the image to build, without tag, nor registry specification, e.g.
       `ubuntu-git`.
+  push:
+    required: false
+    description: Should the image be pushed to the destination registry?
+    default: "true"
 
 outputs:
   version:
@@ -106,12 +110,6 @@ runs:
         printf '::set-output name=now::%s\n' "$(date --iso-8601=seconds)"
         printf '::set-output name=branch::%s\n' "$(printf %s\\n "${{github.ref}}"|sed -E 's~refs/heads/~~')"
 
-    # Setup multi-platform support for Docker build
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v1
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
-
     # Build and Push the image to the remote registry, in turns.
     - name: Build/Push image to Registry
       uses: docker/build-push-action@v2
@@ -120,7 +118,7 @@ runs:
         tags: |
           ${{ inputs.registry }}/${{ inputs.image }}:${{ env.PKG_VERSION_GITREF }}
         platforms: ${{ inputs.platforms }}
-        push: true
+        push: ${{ fromJSON(inputs.push) }}
         build-args: |
           OCI_GITHUB=https://github.com/${{ github.repository }}
           OCI_ORG=${{ github.repository_owner }}
@@ -134,7 +132,7 @@ runs:
         cache-to: type=gha,mode=max,scope=${{ github.repository}}-${{ github.workflow }}-${{ github.job }}
 
     - name: Make image primary release
-      if: env.PKG_VERSION_GITREF != env.PKG_VERSION
+      if: env.PKG_VERSION_GITREF != env.PKG_VERSION && fromJSON(inputs.push)
       uses: akhilerm/tag-push-action@v2.0.0
       with:
         src: ${{ inputs.registry }}/${{ inputs.image }}:${{ env.PKG_VERSION_GITREF }}
@@ -148,7 +146,7 @@ runs:
 
     # Make the images latest if necessary.
     - name: Make images latest
-      if: fromJSON(inputs.latest)
+      if: fromJSON(inputs.latest) && fromJSON(inputs.push)
       uses: akhilerm/tag-push-action@v2.0.0
       with:
         src: ${{ inputs.registry }}/${{ inputs.image }}:${{ env.PKG_VERSION_GITREF }}

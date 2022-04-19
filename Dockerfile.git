@@ -27,11 +27,11 @@ LABEL org.opencontainers.image.description="Self-compiled git client based on Ub
 LABEL org.opencontainers.image.created="${OCI_RFC3339}"
 
 # Copy our version guess helper
+COPY utils/apt*.sh /usr/local/share/git/
 COPY utils/version.sh utils/install-git.sh /usr/local/bin/
 
 # Install and compile git.
-RUN apt-get update \
-		&& DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends \
+RUN /usr/local/share/git/apt-install.sh \
 					build-essential \
 					curl \
 					gettext \
@@ -40,6 +40,6 @@ RUN apt-get update \
 					wget \
 					zlib1g-dev \
 		&& install-git.sh -v "${GIT_VERSION}" \
-		&& rm -rf /var/lib/apt/lists/*
+		&& /usr/local/share/git/apt-clean.sh
 
 ENTRYPOINT [ "git" ]

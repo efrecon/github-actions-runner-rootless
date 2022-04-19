@@ -63,7 +63,7 @@ if [ -z "$ROOTLESS_DOWNLOAD" ]; then
   if command -v wget >/dev/null 2>&1; then
     ROOTLESS_DOWNLOAD="wget -q -O -"
   elif command -v curl >/dev/null 2>&1; then
-    ROOTLESS_DOWNLOAD="curl -sSL -"
+    ROOTLESS_DOWNLOAD="curl -sSL"
   else
     echo "Cannot find an external tool for URL downloads!" >&2
     exit 1

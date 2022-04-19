@@ -1,3 +1,6 @@
+# Manually request for version numbers of relevant dependencies (Docker and git)
+# and runner. Build new images of everything (if necessary), for all platforms,
+# tagged with these versions.
 name: Manual Release
 
 on:

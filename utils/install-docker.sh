@@ -35,11 +35,17 @@ while getopts "v:c:h-" opt; do
 done
 shift $((OPTIND-1))
 
-version() {
-  if command -v "version.sh" >/dev/null 2>&1; then
-    version.sh "$1"
+dependency() {
+  # shellcheck disable=SC3043 # local is implemented in almost all shells
+  local prg || true
+
+  prg=$1
+  shift
+
+  if command -v "${prg}.sh" >/dev/null 2>&1; then
+    "${prg}.sh" "$@"
   else
-    "$(dirname "$0")/version.sh" "$1"
+    "$(dirname "$0")/${prg}.sh" "$@"
   fi
 }
 
@@ -47,7 +53,7 @@ version() {
 # get the latest version of Docker to build upon.
 if [ "${DOCKER_CHANNEL}" = "stable" ]; then
   if [ "${DOCKER_VERSION}" = "latest" ] || printf %s\\n "${DOCKER_VERSION}" | grep -Eq '^[0-9a-f]{7}$'; then
-    DOCKER_VERSION=$(version "moby/moby")
+    DOCKER_VERSION=$(dependency version "moby/moby")
   fi
 fi
 
@@ -62,7 +68,7 @@ if [ -z "$DOCKER_DOWNLOAD" ]; then
   if command -v wget >/dev/null 2>&1; then
     DOCKER_DOWNLOAD="wget -q -O -"
   elif command -v curl >/dev/null 2>&1; then
-    DOCKER_DOWNLOAD="curl -sSL -"
+    DOCKER_DOWNLOAD="curl -sSL"
   else
     echo "Cannot find an external tool for URL downloads!" >&2
     exit 1
@@ -71,19 +77,7 @@ fi
 
 # Decide which URL to get the tar from, this depends on the current
 # architecture.
-arch="$(uname --m)"
-case "$arch" in
-      # amd64
-  x86_64) dockerArch='x86_64' ;;
-      # arm32v6
-  armhf) dockerArch='armel' ;;
-      # arm32v7
-  armv7) dockerArch='armhf' ;;
-      # arm64v8
-  aarch64) dockerArch='aarch64' ;;
-  *) echo >&2 "error: unsupported architecture ($arch)"; exit 1 ;;
-esac
-url=https://download.docker.com/linux/static/${DOCKER_CHANNEL}/${dockerArch}/docker-${DOCKER_VERSION}.tgz
+url=https://download.docker.com/linux/static/${DOCKER_CHANNEL}/$(dependency arch -e 1 -t "x86_64: armhf:armel armv7:armhf aarch64:")/docker-${DOCKER_VERSION}.tgz
 
 # Download and install into /usr/local/bin
 $DOCKER_DOWNLOAD "$url" >/tmp/docker.tgz
