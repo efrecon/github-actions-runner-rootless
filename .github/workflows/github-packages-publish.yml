@@ -1,3 +1,7 @@
+# Whenever we push a (relevant) change to the code, try to generate test images
+# at the GHCR, and just for Intel. Images will be tagged with the GIT short SHA
+# and can be used for testing purposes, e.g. when setting up a test runner in
+# k8s.
 name: Publish to GHCR
 on:
   push:

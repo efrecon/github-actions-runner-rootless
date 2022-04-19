@@ -1,3 +1,7 @@
+# On PR, we want to make sure things will work when the PR is merged. Build
+# everything from scratch, just for Intel for a quicker process, and pull/push
+# to a local registry as we: 1. do not want to pollute the GHCR or DockerHub, 2.
+# Want to test the entire process.
 name: PR
 on:
   pull_request:
@@ -7,6 +11,8 @@ jobs:
   push:
     name: Build Intel Images
     runs-on: ubuntu-latest
+    # Create a local registry so we can run a complete test, including
+    # pushing/pulling from registry if necessary.
     services:
       registry:
         image: registry:2
@@ -22,6 +28,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
         with:
           driver-opts: network=host
+      # Build all images, one at a time
       - name: Build Docker Image
         uses: ./.github/actions/image
         id: docker
