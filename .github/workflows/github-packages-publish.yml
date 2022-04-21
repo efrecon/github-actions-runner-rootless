@@ -71,3 +71,4 @@ jobs:
           build-args: |
             DOCKER_VERSION=${{ steps.docker.outputs.version }}
             GIT_VERSION=${{ steps.git.outputs.version }}
+            USER_RUNNER=rootless
