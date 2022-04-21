@@ -22,9 +22,11 @@ ARG GH_RUNNER_VERSION="latest"
 ARG COMPOSE_VERSION=latest
 ARG COMPOSE_SWITCH_VERSION=latest
 
-# Name of Users and uid remapping information
+# (Same) name of users and uid remapping information. This seems unfinished
+# business in the original code. Having the same user simplifies usage from
+# alternate build tools, e.g. img.
 ARG USER_DOCKER=rootless
-ARG USER_RUNNER=runner
+ARG USER_RUNNER=rootless
 ARG USER_REMAP=65537
 
 ARG DOCKERD_ROOTLESS_INSTALL_FLAGS
